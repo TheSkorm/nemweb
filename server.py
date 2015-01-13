@@ -50,6 +50,7 @@ def index():
 	
 @app.route("/dispatch")
 def dispatch():
+#TODO This is a mysql view - make a better way to do this in sqlalch
     cnx = mysql.connector.connect(user=config['database']['dbuser'], password=config['database']['dbpassword'], database='nem')
     cnx.autocommit = True
     cursor = cnx.cursor()

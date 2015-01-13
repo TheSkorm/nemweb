@@ -1,42 +1,39 @@
 import urllib.request
 import configparser
-
-from html.parser import HTMLParser
-from bs4 import BeautifulSoup
-from io import BytesIO
-from zipfile import ZipFile
-from io import TextIOWrapper
 import csv
 import sqlalchemy
-from sqlalchemy.orm import sessionmaker
 import json
 import traceback
 import time
+from bs4 import BeautifulSoup
 from datetime import datetime
-
+from html.parser import HTMLParser
+from io import BytesIO, TextIOWrapper
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from twitter import *
+from zipfile import ZipFile
+
 config = configparser.ConfigParser()
 config.read("config.cfg")
 
-twitterapi = Twitter(
-    auth=OAuth(
-config["twitter"]["consumer_key"],
-config["twitter"]["consumer_secret"],
-config["twitter"]["access_token_key"],
-config["twitter"]["access_token_secret"]
+twitterapi = Twitter(auth=OAuth(
+	config["twitter"]["consumer_key"],
+	config["twitter"]["consumer_secret"],
+	config["twitter"]["access_token_key"],
+	config["twitter"]["access_token_secret"]
 ))
 
-urls = {"base": "http://www.nemweb.com.au/",
-        "p5": "http://www.nemweb.com.au/Reports/CURRENT/P5_Reports/",
-        "dispatchis": "http://www.nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/",
-        "notices": "http://www.nemweb.com.au/Reports/CURRENT/Market_Notice/"
-        }
+urls = {
+	"base": "http://www.nemweb.com.au/",
+	"p5": "http://www.nemweb.com.au/Reports/CURRENT/P5_Reports/",
+	"dispatchis": "http://www.nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/",
+	"notices": "http://www.nemweb.com.au/Reports/CURRENT/Market_Notice/"
+}
 
-from sqlalchemy import create_engine
 engine = create_engine(config["database"]["dbstring"])
-from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
-from sqlalchemy import Column, Integer, String, DateTime, Float
 
 class Downloads(Base):
      __tablename__ = 'downloads'
@@ -224,10 +221,10 @@ def processNotices():
 
         
 while 1:
-        try:
-                processP5()
-                processDispatchIS()
-                processNotices()
-                time.sleep(30)
-        except Exception as e:
-            print(traceback.format_exc())
+    try:
+		processP5()
+		processDispatchIS()
+		processNotices()
+		time.sleep(30)
+	except Exception as e:
+		print(traceback.format_exc())
