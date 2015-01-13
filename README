@@ -1,0 +1,1 @@
+A nemweb / nem / aemo data downloader. Dumps data into a database and also tweets using this lib - https://pypi.python.org/pypi/twitter/
