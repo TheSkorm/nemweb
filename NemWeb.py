@@ -19,10 +19,10 @@ config = configparser.ConfigParser()
 config.read("config.cfg")
 
 twitterapi = Twitter(auth=OAuth(
-	config["twitter"]["consumer_key"],
-	config["twitter"]["consumer_secret"],
 	config["twitter"]["access_token_key"],
-	config["twitter"]["access_token_secret"]
+	config["twitter"]["access_token_secret"],
+	config["twitter"]["consumer_key"],
+	config["twitter"]["consumer_secret"]
 ))
 
 urls = {
@@ -222,9 +222,9 @@ def processNotices():
         
 while 1:
     try:
-		processP5()
-		processDispatchIS()
-		processNotices()
-		time.sleep(30)
-	except Exception as e:
-		print(traceback.format_exc())
+            processP5()
+            processDispatchIS()
+            processNotices()
+            time.sleep(30)
+    except Exception as e:
+            print(traceback.format_exc())

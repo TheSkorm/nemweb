@@ -1,4 +1,8 @@
 from flask import Flask, render_template 
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float  
+from sqlalchemy.ext.declarative import declarative_base  
+from sqlalchemy.orm import sessionmaker 
+from datetime import timedelta, datetime
 import flask 
 import mysql.connector
 import urllib.request
@@ -11,9 +15,48 @@ app.debug = True
 
 config = configparser.ConfigParser()
 config.read("config.cfg")
-#gm will hate me for this :P
 
-#http://stackoverflow.com/questions/22315919/how-to-get-all-mysql-tuple-result-and-convert-to-json
+
+engine = create_engine(config["database"]["dbstring"])  
+Base = declarative_base()  
+  
+class Downloads(Base):  
+     __tablename__ = 'downloads'  
+     url = Column(String(255), primary_key=True)  
+  
+class P5(Base):  
+     __tablename__ = 'p5'  
+     datetime = Column(DateTime, primary_key=True)  
+     regionid = Column(String(100), primary_key=True)  
+     rrp = Column(Float)  
+     demand = Column(Float)  
+     generation = Column(Float)  
+  
+class dispatchIS(Base):  
+     __tablename__ = 'dispatchIS'  
+     datetime = Column(DateTime, primary_key=True)  
+     regionid = Column(String(100), primary_key=True)  
+     rrp = Column(Float)  
+     demand = Column(Float)  
+     generation = Column(Float)  
+     def as_dict(self):
+          return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+class notices(Base):  
+     __tablename__ = 'notices'  
+     id = Column(Integer, primary_key=True)  
+     datetime = Column(DateTime)  
+     message = Column(String(500))  
+     url = Column(String(255))  
+  
+  
+  
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()
+
+
+
+
 def dictfetchall(cursor):
     # Returns all rows from a cursor as a list of dicts
     desc = cursor.description
@@ -50,15 +93,15 @@ def index():
 	
 @app.route("/dispatch")
 def dispatch():
-#TODO This is a mysql view - make a better way to do this in sqlalch
-    cnx = mysql.connector.connect(user=config['database']['dbuser'], password=config['database']['dbpassword'], database='nem')
-    cnx.autocommit = True
-    cursor = cnx.cursor()
-    query = ("select * from dispatch_region_price_pivot order by datetime desc LIMIT 576")
-    cursor.execute(query)
-    a = dictfetchall(cursor)
-    cursor.close()
-    return flask.jsonify(results=a)
+    s = session.query(dispatchIS).filter(dispatchIS.datetime > datetime.now() - timedelta(hours=48))
+    export = {}
+    for item in s:
+         item = item.as_dict()
+         if str(item['datetime']) not in export:
+              export[str(item['datetime'])] = {}
+         export[str(item['datetime'])][item['regionid']] = item
+               
+    return flask.jsonify(results=export)
 
 	
 if __name__ == "__main__":

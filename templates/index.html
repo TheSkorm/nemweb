@@ -148,22 +148,22 @@ data = new google.visualization.DataTable();
 
           $.each(results["results"], function (i, row) {
 	    rowdata = [
-              new Date(row.datetime),
-              parseFloat(row["max(nswrrp)"]),
-              parseFloat(row["max(sarrp)"]),
-              parseFloat(row["max(vicrrp)"]),
-              parseFloat(row["max(qldrrp)"]),
-              parseFloat(row["max(tasrrp)"]),
-              parseFloat(row["max(nswgen)"]),
-              parseFloat(row["max(sagen)"]),
-              parseFloat(row["max(vicgen)"]),
-              parseFloat(row["max(qldgen)"]),
-              parseFloat(row["max(tasgen)"]),
-              parseFloat(row["max(nswdemand)"]),
-              parseFloat(row["max(sademand)"]),
-              parseFloat(row["max(vicdemand)"]),
-              parseFloat(row["max(qlddemand)"]),
-              parseFloat(row["max(tasdemand)"])
+              new Date(i),
+              parseFloat(row["SA1"]['rrp']),
+              parseFloat(row["VIC1"]['rrp']),
+              parseFloat(row["QLD1"]['rrp']),
+              parseFloat(row["NSW1"]['rrp']),
+              parseFloat(row["TAS1"]['rrp']),
+              parseFloat(row["NSW1"]['generation']),
+              parseFloat(row["SA1"]['generation']),
+              parseFloat(row["VIC1"]['generation']),
+              parseFloat(row["QLD1"]['generation']),
+              parseFloat(row["TAS1"]['generation']),
+              parseFloat(row["NSW1"]['demand']),
+              parseFloat(row["SA1"]['demand']),
+              parseFloat(row["VIC1"]['demand']),
+              parseFloat(row["QLD1"]['demand']),
+              parseFloat(row["TAS1"]['demand']),
             ];
             data.addRow(rowdata);
           });

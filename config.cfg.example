@@ -1,7 +1,5 @@
 [database]
-dbstring=EXAMPLE
-dbuser=EXAMPLE
-dbpassword=EXAMPLE
+dbstring=mysql+mysqlconnector://username:password@localhost/dbname
 
 [twitter]
 consumer_key=EXAMPLE
