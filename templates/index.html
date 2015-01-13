@@ -1,0 +1,285 @@
+<!doctype html>
+<html>
+<head>
+<title>NemWeb</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="https://www.google.com/jsapi"></script>
+
+ <script>
+
+
+
+
+
+
+
+
+
+
+      // onload callback
+      function drawChart() {
+
+
+        // JSONP request
+        var jsonData = $.ajax({
+          url: '/dispatch',
+          dataType: 'json',
+        }).done(function (results) {
+
+data = new google.visualization.DataTable();
+
+          data.addColumn('datetime', 'Date Time');
+          data.addColumn('number', 'NSW');
+          data.addColumn('number', 'SA');
+          data.addColumn('number', 'VIC');
+          data.addColumn('number', 'QLD');
+          data.addColumn('number', 'TAS');
+          data.addColumn('number', 'NSW - generated');
+          data.addColumn('number', 'SA - generated');
+          data.addColumn('number', 'VIC - generated');
+          data.addColumn('number', 'QLD - generated');
+          data.addColumn('number', 'TAS - generated');
+          data.addColumn('number', 'NSW - demand');
+          data.addColumn('number', 'SA - demand');
+          data.addColumn('number', 'VIC - demand');
+          data.addColumn('number', 'QLD - demand');
+          data.addColumn('number', 'TAS - demand');
+
+
+  columns = [0];
+    seriesMap = [{
+        column: 1,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 2,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 3,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 4,
+        roleColumns: [],
+        display: true
+    }, {
+        column: 5,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 6,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 7,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 8,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 9,
+        roleColumns: [],
+        display: true
+    }, {
+        column: 10,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 11,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 12,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 13,
+        roleColumns: [],
+        display: false
+    }, {
+        column: 14,
+        roleColumns: [],
+        display: true
+    }, {
+        column: 15,
+        roleColumns: [],
+        display: false
+    }];
+     columnsMap = {};
+     series = [];
+    for (var i = 0; i < seriesMap.length; i++) {
+        var col = seriesMap[i].column;
+        columnsMap[col] = i;
+        // set the default series option
+        series[i] = {};
+        if (seriesMap[i].display) {
+            // if the column is the domain column or in the default list, display the series
+            columns.push(col);
+        }
+        else {
+            // otherwise, hide it
+            columns.push({
+                label: data.getColumnLabel(col),
+                type: data.getColumnType(col),
+                sourceColumn: col,
+                calc: function () {
+                    return null;
+                }
+            });
+            // backup the default color (if set)
+            if (typeof(series[i].color) !== 'undefined') {
+                series[i].backupColor = series[i].color;
+            }
+            series[i].color = '#CCCCCC';
+        }
+        for (var j = 0; j < seriesMap[i].roleColumns.length; j++) {
+            columns.push(seriesMap[i].roleColumns[j]);
+        }
+    }
+    
+  
+
+
+
+
+          
+
+          $.each(results["results"], function (i, row) {
+	    rowdata = [
+              new Date(row.datetime),
+              parseFloat(row["max(nswrrp)"]),
+              parseFloat(row["max(sarrp)"]),
+              parseFloat(row["max(vicrrp)"]),
+              parseFloat(row["max(qldrrp)"]),
+              parseFloat(row["max(tasrrp)"]),
+              parseFloat(row["max(nswgen)"]),
+              parseFloat(row["max(sagen)"]),
+              parseFloat(row["max(vicgen)"]),
+              parseFloat(row["max(qldgen)"]),
+              parseFloat(row["max(tasgen)"]),
+              parseFloat(row["max(nswdemand)"]),
+              parseFloat(row["max(sademand)"]),
+              parseFloat(row["max(vicdemand)"]),
+              parseFloat(row["max(qlddemand)"]),
+              parseFloat(row["max(tasdemand)"])
+            ];
+            data.addRow(rowdata);
+          });
+
+
+
+    chart = new google.visualization.ChartWrapper({
+        chartType: 'LineChart',
+        containerId: 'chart',
+        dataTable: data,
+	options:  {
+            title: 'Nem',
+ 		
+	    vAxes: {0: {viewWindowMode:'explicit',
+		title: "Price ($/MWhr)",
+                logScale: true,
+}, 1: {title: "MW"}		
+
+},
+            hAxis: {                
+format: "yyyy-MM-dd hh:mm"
+}
+    }
+
+});
+targetseries = {0: {targetAxisIndex:0},
+                   1:{targetAxisIndex:0},
+                   2:{targetAxisIndex:0},
+                   3:{targetAxisIndex:0},
+                   4:{targetAxisIndex:0},
+                   5: {targetAxisIndex:1},
+                   6:{targetAxisIndex:1},
+                   7:{targetAxisIndex:1},
+                   8:{targetAxisIndex:1},
+                   9:{targetAxisIndex:1},
+                   10: {targetAxisIndex:1},
+                   11:{targetAxisIndex:1},
+                   12:{targetAxisIndex:1},
+                   13:{targetAxisIndex:1},
+                   14:{targetAxisIndex:1},
+                  }
+series = jQuery.extend(true, targetseries,series);
+console.log(series);
+  chart.setOption('series', series);
+
+          google.visualization.events.addListener(chart, 'select', showHideSeries);
+    var view = {
+        columns: columns
+    };
+          chart.draw();
+        });
+
+      }
+
+      // load chart lib
+      google.load('visualization', '1', {
+        packages: ['corechart']
+      });
+ function showHideSeries () {
+        var sel = chart.getChart().getSelection();
+        // if selection length is 0, we deselected an element
+        if (sel.length > 0) {
+            // if row is undefined, we clicked on the legend
+            if (sel[0].row == null) {
+                var col = sel[0].column;
+                if (typeof(columns[col]) == 'number') {
+                    var src = columns[col];
+                    console.log(src);
+                    // hide the data series
+                    columns[col] = {
+                        label: data.getColumnLabel(src),
+                        type: data.getColumnType(src),
+                        sourceColumn: src,
+                        calc: function () {
+                            return null;
+                        }
+                    };
+                    
+                    // grey out the legend entry
+                    series[columnsMap[src]].color = '#CCCCCC';
+                }
+                else {
+                    var src = columns[col].sourceColumn;
+                    
+                    // show the data series
+                    columns[col] = src;
+                    series[columnsMap[src]].color = null;
+                }
+               var view = chart.getView() || {};
+               view.columns = columns;
+               chart.setView(view);
+                chart.draw();
+            }
+        }
+    }
+    
+
+      // call drawChart once google charts is loaded
+      google.setOnLoadCallback(drawChart);
+$(window).resize(function() {
+   window.chart.draw();
+ });
+    </script>
+
+
+</head>
+<body>
+<div class=header>
+  <h1>NemWeb</h1>
+<a href="https://twitter.com/au_nem">NEM Market Notices (via Twitter)</a><br>
+For source code to download and process contact nem@mwheeler.org
+</div>
+<div id="chart" style="width: 95%;position: absolute; bottom: 20px; top:72pt;">&nbsp;</div>
+<div class="footer">
+    &nbsp;
+</div>
+</body>
+</html>
