@@ -50,7 +50,7 @@ def index():
 	
 @app.route("/dispatch")
 def dispatch():
-    cnx = mysql.connector.connect(user=config['general']['dbuser'], password=config['general']['dbpassword'], database='nem')
+    cnx = mysql.connector.connect(user=config['database']['dbuser'], password=config['database']['dbpassword'], database='nem')
     cnx.autocommit = True
     cursor = cnx.cursor()
     query = ("select * from dispatch_region_price_pivot order by datetime desc LIMIT 576")

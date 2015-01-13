@@ -1,9 +1,10 @@
-[general]
+[database]
 dbstring=EXAMPLE
 dbuser=EXAMPLE
 dbpassword=EXAMPLE
 
-twitter1=EXAMPLE
-twitter2=EXAMPLE
-twitter3=EXAMPLE
-twitter4=EXAMPLE
+[twitter]
+consumer_key=EXAMPLE
+consumer_secret=EXAMPLE
+access_token_key=EXAMPLE
+access_token_secret=EXAMPLE

@@ -20,10 +20,10 @@ config.read("config.cfg")
 
 twitterapi = Twitter(
     auth=OAuth(
-config["general"]["twitter1"],
-config["general"]["twitter2"],
-config["general"]["twitter3"],
-config["general"]["twitter4"]
+config["twitter"]["consumer_key"],
+config["twitter"]["consumer_secret"],
+config["twitter"]["access_token_key"],
+config["twitter"]["access_token_secret"]
 ))
 
 urls = {"base": "http://www.nemweb.com.au/",
@@ -33,7 +33,7 @@ urls = {"base": "http://www.nemweb.com.au/",
         }
 
 from sqlalchemy import create_engine
-engine = create_engine(config["general"]["dbstring"])
+engine = create_engine(config["database"]["dbstring"])
 from sqlalchemy.ext.declarative import declarative_base
 Base = declarative_base()
 from sqlalchemy import Column, Integer, String, DateTime, Float
