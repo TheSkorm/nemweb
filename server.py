@@ -11,7 +11,7 @@ import re
 import configparser
  
 app = Flask(__name__) 
-app.debug = True 
+app.debug = False
 
 config = configparser.ConfigParser()
 config.read("config.cfg")
