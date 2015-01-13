@@ -143,10 +143,10 @@ data = new google.visualization.DataTable();
           $.each(results["results"], function (i, row) {
 	    rowdata = [
               new Date(i),
+              parseFloat(row["NSW1"]['rrp']),
               parseFloat(row["SA1"]['rrp']),
               parseFloat(row["VIC1"]['rrp']),
               parseFloat(row["QLD1"]['rrp']),
-              parseFloat(row["NSW1"]['rrp']),
               parseFloat(row["TAS1"]['rrp']),
               parseFloat(row["NSW1"]['generation']),
               parseFloat(row["SA1"]['generation']),
