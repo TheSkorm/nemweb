@@ -1,12 +1,14 @@
 from flask import Flask, render_template 
 import flask 
-app = Flask(__name__) 
-app.debug = True 
-import mysql.connector 
-import urllib.request 
+import mysql.connector
+import urllib.request
 from io import BytesIO 
 import re 
-import configparser 
+import configparser
+ 
+app = Flask(__name__) 
+app.debug = True 
+
 config = configparser.ConfigParser()
 config.read("config.cfg")
 #gm will hate me for this :P
@@ -40,17 +42,15 @@ def notice(id):
     
     return flask.Response(data, mimetype="text/html")
 
+	
 @app.route("/")
 def index():
     return render_template('index.html')
 
-
-
+	
 @app.route("/dispatch")
 def dispatch():
-    cnx = mysql.connector.connect(user=config['general']['dbuser'], password=config['general']['dbpassword'],
-                            
-                              database='nem')
+    cnx = mysql.connector.connect(user=config['general']['dbuser'], password=config['general']['dbpassword'], database='nem')
     cnx.autocommit = True
     cursor = cnx.cursor()
     query = ("select * from dispatch_region_price_pivot order by datetime desc LIMIT 576")
@@ -59,5 +59,6 @@ def dispatch():
     cursor.close()
     return flask.jsonify(results=a)
 
+	
 if __name__ == "__main__":
     app.run(host='0.0.0.0')
