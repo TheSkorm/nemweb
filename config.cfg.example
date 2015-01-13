@@ -1,6 +1,6 @@
 [database]
-dbstring=mysql+mysqlconnector://username:password@localhost/dbname
-
+#dbstring=mysql+mysqlconnector://username:password@localhost/dbname
+#dbstring=sqlite:///test.db
 [twitter]
 consumer_key=EXAMPLE
 consumer_secret=EXAMPLE

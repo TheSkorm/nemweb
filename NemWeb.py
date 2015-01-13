@@ -103,7 +103,7 @@ def processP5():
                                         columns = row
                                 elif row[2] == "REGIONSOLUTION":
                                         p5value = {
-                               "datetime" : row[columns.index("INTERVAL_DATETIME")],
+                               "datetime" : datetime.strptime(row[columns.index("INTERVAL_DATETIME")], "%Y/%m/%d %H:%M:%S"),
                                "regionid" : row[columns.index("REGIONID")],
                                "rrp" : row[columns.index("RRP")],
                                "demand" : row[columns.index("TOTALDEMAND")],
@@ -144,7 +144,7 @@ def processDispatchIS():
                                     columnsprice = row
                         elif row[2] == "PRICE":
                                     dispatchISvalue = {
-                               "datetime" : row[columnsprice.index("SETTLEMENTDATE")],
+                               "datetime" : datetime.strptime(row[columnsprice.index("SETTLEMENTDATE")],"%Y/%m/%d %H:%M:%S"),
                                "regionid" : row[columnsprice.index("REGIONID")],
                                "rrp" : row[columnsprice.index("RRP")]
                                }
@@ -154,7 +154,7 @@ def processDispatchIS():
                                     columnsdemand = row
                         elif row[2] == "REGIONSUM":
                                     dispatchISvalue = {
-                               "datetime" : row[columnsdemand.index("SETTLEMENTDATE")],
+                               "datetime" : datetime.strptime(row[columnsdemand.index("SETTLEMENTDATE")],"%Y/%m/%d %H:%M:%S"),
                                "regionid" : row[columnsdemand.index("REGIONID")],
                                "demand" : row[columnsdemand.index("TOTALDEMAND")],
                                "generation" : row[columnsdemand.index("AVAILABLEGENERATION")] 
@@ -227,7 +227,8 @@ def processNotices():
         
 while 1:
     try:
-            processP5()
+#P5 not used yet - skip that check
+#            processP5()
             processDispatchIS()
             processNotices()
             time.sleep(30)
