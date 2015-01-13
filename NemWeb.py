@@ -20,10 +20,6 @@ config.read("config.cfg")
 
 twitterapi = Twitter(
     auth=OAuth(
-#                      '2929151922-rLs8lAMg2uyAsQ3qfS2TvqypvUAAmmVE8rQxvE2',
-#        'Sy7MHTQUzjZzFZZq7su7qwGHxL0MvmfkZSlNS4z1GxxoV',
-#'1kl6b5oFJKWv23ND3Ne5Q9bLO',
-#                      'RTU3OtXTsy2IojAgvQUQFYsubIOPeqMAUQptbfE315YGv9i9JV'))
 config["general"]["twitter1"],
 config["general"]["twitter2"],
 config["general"]["twitter3"],
