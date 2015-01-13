@@ -1,21 +1,20 @@
 <!doctype html>
 <html>
 <head>
-<title>NemWeb</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="https://www.google.com/jsapi"></script>
+	<title>NemWeb</title>
+	<meta charset="utf-8">
+	
+	<!-- Core JavaScript Libraries -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script src="https://www.google.com/jsapi"></script>
+	
+	<!-- BootStrap Theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap-theme.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
 
- <script>
-
-
-
-
-
-
-
-
-
-
+	<!-- Custom JavaScript -->
+	<script>
       // onload callback
       function drawChart() {
 
@@ -268,18 +267,20 @@ $(window).resize(function() {
    window.chart.draw();
  });
     </script>
-
-
 </head>
 <body>
-<div class=header>
-  <h1>NemWeb</h1>
-<a href="https://twitter.com/au_nem">NEM Market Notices (via Twitter)</a><br>
-For source code to download and process contact nem@mwheeler.org
-</div>
-<div id="chart" style="width: 95%;position: absolute; bottom: 20px; top:72pt;">&nbsp;</div>
-<div class="footer">
-    &nbsp;
-</div>
+	<div class="header">
+		<h1>NemWeb</h1>
+		<p>
+			<a href="https://twitter.com/au_nem">NEM Market Notices (via Twitter)</a><br />
+			For source code to download and process contact <a href="mailto:nem@mwheeler.org">nem@mwheeler.org</a>.
+		</p>
+	</div>
+	
+	<div id="chart" style="width: 95%;position: absolute; bottom: 20px; top:72pt;">&nbsp;</div>
+	
+	<div class="footer">
+		&nbsp;
+	</div>
 </body>
 </html>
