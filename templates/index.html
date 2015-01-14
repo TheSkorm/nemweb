@@ -7,11 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">	
   <link href="static/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://www.google.com/jsapi"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 	<script>
-      // onload callback
-      function drawChart() {
-
 
         // JSONP request
         var jsonData = $.ajax({
@@ -19,244 +16,48 @@
           dataType: 'json',
         }).done(function (results) {
 
-data = new google.visualization.DataTable();
-
-          data.addColumn('datetime', 'Date Time');
-          data.addColumn('number', 'NSW');
-          data.addColumn('number', 'SA');
-          data.addColumn('number', 'VIC');
-          data.addColumn('number', 'QLD');
-          data.addColumn('number', 'TAS');
-          data.addColumn('number', 'NSW - generated');
-          data.addColumn('number', 'SA - generated');
-          data.addColumn('number', 'VIC - generated');
-          data.addColumn('number', 'QLD - generated');
-          data.addColumn('number', 'TAS - generated');
-          data.addColumn('number', 'NSW - demand');
-          data.addColumn('number', 'SA - demand');
-          data.addColumn('number', 'VIC - demand');
-          data.addColumn('number', 'QLD - demand');
-          data.addColumn('number', 'TAS - demand');
-
-
-  columns = [0];
-    seriesMap = [{
-        column: 1,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 2,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 3,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 4,
-        roleColumns: [],
-        display: true
-    }, {
-        column: 5,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 6,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 7,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 8,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 9,
-        roleColumns: [],
-        display: true
-    }, {
-        column: 10,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 11,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 12,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 13,
-        roleColumns: [],
-        display: false
-    }, {
-        column: 14,
-        roleColumns: [],
-        display: true
-    }, {
-        column: 15,
-        roleColumns: [],
-        display: false
-    }];
-     columnsMap = {};
-     series = [];
-    for (var i = 0; i < seriesMap.length; i++) {
-        var col = seriesMap[i].column;
-        columnsMap[col] = i;
-        // set the default series option
-        series[i] = {};
-        if (seriesMap[i].display) {
-            // if the column is the domain column or in the default list, display the series
-            columns.push(col);
-        }
-        else {
-            // otherwise, hide it
-            columns.push({
-                label: data.getColumnLabel(col),
-                type: data.getColumnType(col),
-                sourceColumn: col,
-                calc: function () {
-                    return null;
-                }
-            });
-            // backup the default color (if set)
-            if (typeof(series[i].color) !== 'undefined') {
-                series[i].backupColor = series[i].color;
-            }
-            series[i].color = '#CCCCCC';
-        }
-        for (var j = 0; j < seriesMap[i].roleColumns.length; j++) {
-            columns.push(seriesMap[i].roleColumns[j]);
-        }
-    }
-    
-  
+//TODO ewww yuck - just loop through you idiot
+	data = results['results']
+seriesdata = {0:[],1:[],2:[],3:[],4:[],5:[],6:[],7:[],8:[],9:[],10:[],11:[],12:[],13:[],14:[]}
+for(i in data){
+row = data[i];
+seriesdata[0].push([Date.parse(row["QLD1"]['datetime']),row["QLD1"]['rrp']]);
+seriesdata[1].push([Date.parse(row["QLD1"]['datetime']),row["NSW1"]['rrp']]);
+seriesdata[2].push([Date.parse(row["QLD1"]['datetime']),row["SA1"]['rrp']]);
+seriesdata[3].push([Date.parse(row["QLD1"]['datetime']),row["TAS1"]['rrp']]);
+seriesdata[4].push([Date.parse(row["QLD1"]['datetime']),row["VIC1"]['rrp']]);
+seriesdata[5].push([Date.parse(row["QLD1"]['datetime']),row["QLD1"]['demand']]);
+seriesdata[6].push([Date.parse(row["QLD1"]['datetime']),row["NSW1"]['demand']]);
+seriesdata[7].push([Date.parse(row["QLD1"]['datetime']),row["SA1"]['demand']]);
+seriesdata[8].push([Date.parse(row["QLD1"]['datetime']),row["TAS1"]['demand']]);
+seriesdata[9].push([Date.parse(row["QLD1"]['datetime']),row["VIC1"]['demand']]);
+seriesdata[10].push([Date.parse(row["QLD1"]['datetime']),row["QLD1"]['generation']]);
+seriesdata[11].push([Date.parse(row["QLD1"]['datetime']),row["NSW1"]['generation']]);
+seriesdata[12].push([Date.parse(row["QLD1"]['datetime']),row["SA1"]['generation']]);
+seriesdata[13].push([Date.parse(row["QLD1"]['datetime']),row["TAS1"]['generation']]);
+seriesdata[14].push([Date.parse(row["QLD1"]['datetime']),row["VIC1"]['generation']]);
 
 
 
+          };
+$('#container').highcharts().addSeries({name: "QLD $", data: seriesdata[0]});
+$('#container').highcharts().addSeries({name: "NSW $", data: seriesdata[1]});
+$('#container').highcharts().addSeries({name: "SA $", data: seriesdata[2]});
+$('#container').highcharts().addSeries({name: "TAS $", data: seriesdata[3]});
+$('#container').highcharts().addSeries({name: "VIC $", data: seriesdata[4]});
 
-          
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "QLD generation", data: seriesdata[5]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "NSW generation", data: seriesdata[6]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "SA generation", data: seriesdata[7]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "TAS generation", data: seriesdata[8]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "VIC generation", data: seriesdata[9]});
 
-          $.each(results["results"], function (i, row) {
-	    rowdata = [
-              new Date(i),
-              parseFloat(row["NSW1"]['rrp']),
-              parseFloat(row["SA1"]['rrp']),
-              parseFloat(row["VIC1"]['rrp']),
-              parseFloat(row["QLD1"]['rrp']),
-              parseFloat(row["TAS1"]['rrp']),
-              parseFloat(row["NSW1"]['generation']),
-              parseFloat(row["SA1"]['generation']),
-              parseFloat(row["VIC1"]['generation']),
-              parseFloat(row["QLD1"]['generation']),
-              parseFloat(row["TAS1"]['generation']),
-              parseFloat(row["NSW1"]['demand']),
-              parseFloat(row["SA1"]['demand']),
-              parseFloat(row["VIC1"]['demand']),
-              parseFloat(row["QLD1"]['demand']),
-              parseFloat(row["TAS1"]['demand']),
-            ];
-            data.addRow(rowdata);
-          });
-
-
-
-    chart = new google.visualization.ChartWrapper({
-        chartType: 'LineChart',
-        containerId: 'chart',
-        dataTable: data,
-	options:  {
-            title: 'Nem',
- 		
-	    vAxes: {0: {viewWindowMode:'explicit',
-		title: "Price ($/MWhr)",
-                logScale: true,
-}, 1: {title: "MW"}		
-
-},
-            hAxis: {                
-format: "yyyy-MM-dd hh:mm"
-}
-    }
-
-});
-targetseries = {0: {targetAxisIndex:0},
-                   1:{targetAxisIndex:0},
-                   2:{targetAxisIndex:0},
-                   3:{targetAxisIndex:0},
-                   4:{targetAxisIndex:0},
-                   5: {targetAxisIndex:1},
-                   6:{targetAxisIndex:1},
-                   7:{targetAxisIndex:1},
-                   8:{targetAxisIndex:1},
-                   9:{targetAxisIndex:1},
-                   10: {targetAxisIndex:1},
-                   11:{targetAxisIndex:1},
-                   12:{targetAxisIndex:1},
-                   13:{targetAxisIndex:1},
-                   14:{targetAxisIndex:1},
-                  }
-series = jQuery.extend(true, targetseries,series);
-console.log(series);
-  chart.setOption('series', series);
-
-          google.visualization.events.addListener(chart, 'select', showHideSeries);
-    var view = {
-        columns: columns
-    };
-          chart.draw();
-        });
-
-      }
-
-      // load chart lib
-      google.load('visualization', '1', {
-        packages: ['corechart']
-      });
- function showHideSeries () {
-        var sel = chart.getChart().getSelection();
-        // if selection length is 0, we deselected an element
-        if (sel.length > 0) {
-            // if row is undefined, we clicked on the legend
-            if (sel[0].row == null) {
-                var col = sel[0].column;
-                if (typeof(columns[col]) == 'number') {
-                    var src = columns[col];
-                    console.log(src);
-                    // hide the data series
-                    columns[col] = {
-                        label: data.getColumnLabel(src),
-                        type: data.getColumnType(src),
-                        sourceColumn: src,
-                        calc: function () {
-                            return null;
-                        }
-                    };
-                    
-                    // grey out the legend entry
-                    series[columnsMap[src]].color = '#CCCCCC';
-                }
-                else {
-                    var src = columns[col].sourceColumn;
-                    
-                    // show the data series
-                    columns[col] = src;
-                    series[columnsMap[src]].color = null;
-                }
-               var view = chart.getView() || {};
-               view.columns = columns;
-               chart.setView(view);
-                chart.draw();
-            }
-        }
-    }
-    
-
-      // call drawChart once google charts is loaded
-      google.setOnLoadCallback(drawChart);
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "QLD place", data: seriesdata[10]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "NSW place", data: seriesdata[11]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "SA place", data: seriesdata[12]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "TAS place", data: seriesdata[13]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "VIC place", data: seriesdata[14]});
+    });
     </script>
 </head>
 <body>
@@ -282,9 +83,60 @@ console.log(series);
       </div>
     </nav>
 
-	<div id="chart" style="width: 95%;position: absolute; bottom: 20px; top:72pt;">&nbsp;</div>
-	
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<div id="container" style="min-width: 310px; height: 600px; margin: 0 auto"></div>	
 <script src="static/js/bootstrap.min.js"></script>
+<script>
+$(function () {
+$('#container').highcharts({
+        title: {
+            text: 'Nem Data',
+            x: -20 //center
+        },
+        subtitle: {
+            text: 'Source: nemweb.com.au',
+            x: -20
+        },
+        xAxis: {
+            type: 'datetime',
+            dateTimeLabelFormats: { // don't display the dummy year
+                month: '%e. %b',
+                year: '%b'
+            }
+        },
+yAxis:[{ 
+            labels: {
+                format: '${value}',
+            },
+            type: 'logarithmic',
+            title: {
+                text: 'Price',
+            }
+        }, { 
+            title: {
+                text: 'MW',
+            },
+            labels: {
+                format: '{value} MW',
+            },
+            opposite: true
+        }],
+        tooltip: {
+            valueSuffix: 'MW'
+        },
+	oposite: true,        
+chart: {
+            zoomType: 'x'
+        },
+        legend: {
+            borderWidth: 0
+}
+
+ });
+});
+</script>
+<script src="http://code.highcharts.com/highcharts.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+
 </body>
 </html>
