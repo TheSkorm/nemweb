@@ -18,45 +18,37 @@
 
 //TODO ewww yuck - just loop through you idiot
 	data = results['results']
-seriesdata = {0:[],1:[],2:[],3:[],4:[],5:[],6:[],7:[],8:[],9:[],10:[],11:[],12:[],13:[],14:[]}
+regions = ["QLD1","NSW1","SA1","TAS1","VIC1"]
+price = {}
+demand = {}
+generation = {}
+for( i =0; i<regions.length; i++){
+region = regions[i];
+price[region] = []
+generation[region] = []
+demand[region] = []
+}
+
+
 for(i in data){
 row = data[i];
-seriesdata[0].push([Date.parse(row["QLD1"]['datetime']),row["QLD1"]['rrp']]);
-seriesdata[1].push([Date.parse(row["QLD1"]['datetime']),row["NSW1"]['rrp']]);
-seriesdata[2].push([Date.parse(row["QLD1"]['datetime']),row["SA1"]['rrp']]);
-seriesdata[3].push([Date.parse(row["QLD1"]['datetime']),row["TAS1"]['rrp']]);
-seriesdata[4].push([Date.parse(row["QLD1"]['datetime']),row["VIC1"]['rrp']]);
-seriesdata[5].push([Date.parse(row["QLD1"]['datetime']),row["QLD1"]['demand']]);
-seriesdata[6].push([Date.parse(row["QLD1"]['datetime']),row["NSW1"]['demand']]);
-seriesdata[7].push([Date.parse(row["QLD1"]['datetime']),row["SA1"]['demand']]);
-seriesdata[8].push([Date.parse(row["QLD1"]['datetime']),row["TAS1"]['demand']]);
-seriesdata[9].push([Date.parse(row["QLD1"]['datetime']),row["VIC1"]['demand']]);
-seriesdata[10].push([Date.parse(row["QLD1"]['datetime']),row["QLD1"]['generation']]);
-seriesdata[11].push([Date.parse(row["QLD1"]['datetime']),row["NSW1"]['generation']]);
-seriesdata[12].push([Date.parse(row["QLD1"]['datetime']),row["SA1"]['generation']]);
-seriesdata[13].push([Date.parse(row["QLD1"]['datetime']),row["TAS1"]['generation']]);
-seriesdata[14].push([Date.parse(row["QLD1"]['datetime']),row["VIC1"]['generation']]);
-
+for( i =0; i<regions.length; i++){
+region = regions[i];
+price[region].push([Date.parse(row[region]['datetime']),row[region]['rrp']]);
+generation[region].push([Date.parse(row[region]['datetime']),row[region]['generation']]);
+demand[region].push([Date.parse(row[region]['datetime']),row[region]['demand']]);
+}
 
 
           };
-$('#container').highcharts().addSeries({name: "QLD $", data: seriesdata[0]});
-$('#container').highcharts().addSeries({name: "NSW $", data: seriesdata[1]});
-$('#container').highcharts().addSeries({name: "SA $", data: seriesdata[2]});
-$('#container').highcharts().addSeries({name: "TAS $", data: seriesdata[3]});
-$('#container').highcharts().addSeries({name: "VIC $", data: seriesdata[4]});
 
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "QLD generation", data: seriesdata[5]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "NSW generation", data: seriesdata[6]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "SA generation", data: seriesdata[7]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "TAS generation", data: seriesdata[8]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "VIC generation", data: seriesdata[9]});
+for( i =0; i<regions.length; i++){
+region = regions[i];
+$('#container').highcharts().addSeries({name: region + " $", data: price[region]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " generation", data: generation[region]});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " demand", data: demand[region]});
+}
 
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "QLD demand", data: seriesdata[10]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "NSW demand", data: seriesdata[11]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "SA demand", data: seriesdata[12]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "TAS demand", data: seriesdata[13]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: "VIC demand", data: seriesdata[14]});
     });
     </script>
 </head>
