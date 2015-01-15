@@ -31,6 +31,8 @@ class P5(Base):
      rrp = Column(Float)  
      demand = Column(Float)  
      generation = Column(Float)  
+     def as_dict(self):
+          return {c.name: getattr(self, c.name) for c in self.__table__.columns}
   
 class dispatchIS(Base):  
      __tablename__ = 'dispatchIS'  
@@ -94,6 +96,17 @@ def index():
 @app.route("/dispatch")
 def dispatch():
     s = session.query(dispatchIS).filter(dispatchIS.datetime > datetime.now() - timedelta(hours=48))
+    export = {}
+    for item in s:
+         item = item.as_dict()
+         if str(item['datetime']) not in export:
+              export[str(item['datetime'])] = {}
+         export[str(item['datetime'])][item['regionid']] = item
+               
+    return flask.jsonify(results=export)
+@app.route("/predictions")
+def predictions():
+    s = session.query(P5).filter(P5.datetime > datetime.now())
     export = {}
     for item in s:
          item = item.as_dict()

@@ -227,8 +227,7 @@ def processNotices():
         
 while 1:
     try:
-#P5 not used yet - skip that check
-#            processP5()
+            processP5()
             processDispatchIS()
             processNotices()
             time.sleep(30)

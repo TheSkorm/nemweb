@@ -42,14 +42,20 @@ lastdata = Date.parse(row[region]['datetime'])
           };
 
 for( i =0; i<regions.length; i++){
-var region = regions[i];
-$('#container').highcharts().addSeries({name: region + " $", data: price[region]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " generation", data: generation[region]});
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " demand", data: demand[region]});
+var region = regions[i]; // TODO clean this up
+$('#container').highcharts().addSeries({name: region + " $", data: price[region],   marker : {enabled :false}  });
+$('#container').highcharts().addSeries({name: region + " $", linkedTo: ':previous', dashStyle: 'shortdash', color: $('#container').highcharts().series[i*6].color ,   marker : {enabled :false} });
+
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " generation", data: generation[region],   marker : {enabled :false} });
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " generation", linkedTo: ':previous',dashStyle: 'shortdash', color: ':previous' , color: $('#container').highcharts().series[i*6+2].color,   marker : {enabled :false} });
+
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " demand", data: demand[region],   marker : {enabled :false} });
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " demand", linkedTo: ':previous',dashStyle: 'shortdash', color: ':previous', color: $('#container').highcharts().series[i*6+4].color,   marker : {enabled :false} });
 }
 
 setInterval(requestUpdate, 30000);
-
+setInterval(requestPredictions, 30000);
+requestPredictions();
     });
 
 function requestUpdate(){
@@ -78,14 +84,47 @@ var row = data[i];
 for( i =0; i<regions.length; i++){
 var region = regions[i];
 if (Date.parse(row[region]['datetime']) >  lastdata) {
-console.log("update");
-console.log(row);
-$('#container').highcharts().series[regions.indexOf(region)*3].addPoint([Date.parse(row[region]['datetime']),row[region]['rrp']]);
-$('#container').highcharts().series[regions.indexOf(region)*3+1].addPoint([Date.parse(row[region]['datetime']),row[region]['generation']]);
-$('#container').highcharts().series[regions.indexOf(region)*3+2].addPoint([Date.parse(row[region]['datetime']),row[region]['demand']]);
+$('#container').highcharts().series[regions.indexOf(region)*6].addPoint([Date.parse(row[region]['datetime']),row[region]['rrp']]);
+$('#container').highcharts().series[regions.indexOf(region)*6+2].addPoint([Date.parse(row[region]['datetime']),row[region]['generation']]);
+$('#container').highcharts().series[regions.indexOf(region)*6+4].addPoint([Date.parse(row[region]['datetime']),row[region]['demand']]);
 }
 }}
 lastdata = Date.parse(row[region]['datetime']);
+}
+function requestPredictions(){
+        var jsonData = $.ajax({
+          url: '/predictions',
+          dataType: 'json',
+        }).done(function (update) {
+processPredictions(update['results']);
+})
+
+}
+
+function processPredictions(data){
+var price = {}
+var demand = {}
+var generation = {}
+for( i =0; i<regions.length; i++){
+var region = regions[i];
+price[region] = []
+generation[region] = []
+demand[region] = []
+$('#container').highcharts().series[regions.indexOf(region)*6+1].setData([], false);
+$('#container').highcharts().series[regions.indexOf(region)*6+3].setData([], false);
+$('#container').highcharts().series[regions.indexOf(region)*6+5].setData([], false);
+}
+	
+for(i in data){
+var row = data[i];
+for( i =0; i<regions.length; i++){
+var region = regions[i];
+$('#container').highcharts().series[regions.indexOf(region)*6+1].addPoint([Date.parse(row[region]['datetime']),row[region]['rrp']],false);
+$('#container').highcharts().series[regions.indexOf(region)*6+3].addPoint([Date.parse(row[region]['datetime']),row[region]['generation']],false);
+$('#container').highcharts().series[regions.indexOf(region)*6+5].addPoint([Date.parse(row[region]['datetime']),row[region]['demand']],false);
+}}
+
+$('#container').highcharts().redraw();
 }
     </script>
 </head>
@@ -157,7 +196,8 @@ yAxis:[{
         },
 	oposite: true,        
 chart: {
-            zoomType: 'x'
+            zoomType: 'x',
+alignTicks: false
         },
         legend: {
             borderWidth: 0
