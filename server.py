@@ -51,7 +51,7 @@ class notices(Base):
   
   
 Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
+Session = sessionmaker(bind=engine, autocommit=True)
 session = Session()
 
 
@@ -102,6 +102,17 @@ def dispatch():
          export[str(item['datetime'])][item['regionid']] = item
                
     return flask.jsonify(results=export)
+@app.route("/update")
+def update():
+    s = session.query(dispatchIS).filter(dispatchIS.datetime > datetime.now() - timedelta(hours=1))
+    export = {}
+    for item in s:
+         item = item.as_dict()
+         if str(item['datetime']) not in export:
+              export[str(item['datetime'])] = {}
+         export[str(item['datetime'])][item['regionid']] = item
+               
+    return flask.jsonify(update=export)
 
 	
 if __name__ == "__main__":
