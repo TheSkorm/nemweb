@@ -9,9 +9,13 @@ import urllib.request
 from io import BytesIO 
 import re 
 import configparser
+from flask.ext.compress import Compress
+
+compress = Compress()
  
 app = Flask(__name__) 
 app.debug = False
+Compress(app)
 
 config = configparser.ConfigParser()
 config.read("config.cfg")

@@ -84,9 +84,9 @@ var row = data[i];
 for( i =0; i<regions.length; i++){
 var region = regions[i];
 if (Date.parse(row[region]['datetime']) >  lastdata) {
-$('#container').highcharts().series[regions.indexOf(region)*6].addPoint([Date.parse(row[region]['datetime']),row[region]['rrp']]);
-$('#container').highcharts().series[regions.indexOf(region)*6+2].addPoint([Date.parse(row[region]['datetime']),row[region]['generation']]);
-$('#container').highcharts().series[regions.indexOf(region)*6+4].addPoint([Date.parse(row[region]['datetime']),row[region]['demand']]);
+$('#container').highcharts().series[regions.indexOf(region)*6].addPoint([Date.parse(row[region]['datetime']),row[region]['rrp']],true, true);
+$('#container').highcharts().series[regions.indexOf(region)*6+2].addPoint([Date.parse(row[region]['datetime']),row[region]['generation']], true, true);
+$('#container').highcharts().series[regions.indexOf(region)*6+4].addPoint([Date.parse(row[region]['datetime']),row[region]['demand']], true, true);
 }
 }}
 lastdata = Date.parse(row[region]['datetime']);
@@ -124,7 +124,6 @@ $('#container').highcharts().series[regions.indexOf(region)*6+3].addPoint([Date.
 $('#container').highcharts().series[regions.indexOf(region)*6+5].addPoint([Date.parse(row[region]['datetime']),row[region]['demand']],false);
 }}
 
-$('#container').highcharts().redraw();
 }
     </script>
 </head>

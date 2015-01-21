@@ -214,7 +214,7 @@ def processNotices():
                 elif "Amount:" in line:
                     amount = line.split(":",1)[-1].strip()
             urlviewer=url.replace("http://www.nemweb.com.au/Reports/CURRENT/Market_Notice/","http://nem.mwheeler.org/notice/")
-            sendTwit(notice[:115] + "... " + urlviewer)
+            sendTwit(notice[:110] + "... " + urlviewer)
             msgtime = datetime.strptime(date,'%d/%m/%Y     %H:%M:%S')
             session.merge(notices(id=id, datetime=msgtime, message=notice, url=url))
             session.merge(Downloads(url=url))
