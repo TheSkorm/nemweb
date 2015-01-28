@@ -74,10 +74,10 @@ def prettyNotice(noticeText):
     noticeText = re.sub(r"-+\r?\n(.+)\r?\n-+\r?\n", r"\n<h1>\1</h1>", noticeText)
     noticeText = re.sub(r"\r?\n-+\r?\n", r"\n<hr>", noticeText)
     noticeText = re.sub(r"\n([^\n\r:]+):\r?\n", r"<h2>\1</h2>", noticeText)
-    noticeText = re.sub(r"\r?\n(.{3,30}):(.+)", r"\n<tr><td><b>\1 :</b></td><td>\2</td></tr>", noticeText)
+    noticeText = re.sub(r"\r?\n(.{3,15}):(.+)", r"\n<tr><td><b>\1 :</b></td><td>\2</td></tr>", noticeText)
     noticeText = re.sub(r"((<tr>.+</tr>\r?\n)+)", r"<table>\1</table>", noticeText)
     noticeText = re.sub(r"\r?\n\r?\n", r"\n<br>", noticeText)
-    noticeText = re.sub(r"(.*)[^>]\r?\n", r"\1<br>\n", noticeText)
+    noticeText = re.sub(r"\n(?!<)(.+)", r"\1<br>\n", noticeText)
     noticeText = "<html><head><style>body {font-family: Sans-Serif;}</style></head><body>" + noticeText
     noticeText = noticeText + "</body></html>"
     return noticeText
@@ -110,7 +110,7 @@ def dispatch():
     return flask.jsonify(results=export)
 @app.route("/predictions")
 def predictions():
-    s = session.query(P5).filter(P5.datetime > datetime.now())
+    s = session.query(P5).filter(P5.datetime > datetime.now() - timedelta(minutes=5))
     export = {}
     for item in s:
          item = item.as_dict()
