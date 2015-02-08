@@ -53,7 +53,17 @@ class notices(Base):
      datetime = Column(DateTime)  
      message = Column(String(500))  
      url = Column(String(255))  
-  
+class interconnect(Base):
+     __tablename__ = 'interconnect-dispatchIS'
+     datetime = Column(DateTime, primary_key=True)
+     interconnectorid = Column(String(100), primary_key=True)
+     meteredmwflow = Column(Float)
+     mwflow = Column(Float)
+     mwlosses = Column(Float)
+     exportlimit = Column(Float)
+     importlimit = Column(Float)  
+     def as_dict(self):
+          return {c.name: getattr(self, c.name) for c in self.__table__.columns}
   
   
 Base.metadata.create_all(engine)
@@ -106,6 +116,17 @@ def dispatch():
          if str(item['datetime']) not in export:
               export[str(item['datetime'])] = {}
          export[str(item['datetime'])][item['regionid']] = item
+               
+    return flask.jsonify(results=export)
+@app.route("/interconnect")
+def interconnectjson():
+    s = session.query(interconnect).filter(interconnect.datetime > datetime.now() - timedelta(hours=48))
+    export = {}
+    for item in s:
+         item = item.as_dict()
+         if str(item['datetime']) not in export:
+              export[str(item['datetime'])] = {}
+         export[str(item['datetime'])][item['interconnectorid']] = item
                
     return flask.jsonify(results=export)
 @app.route("/predictions")

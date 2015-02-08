@@ -59,6 +59,17 @@ class dispatchIS(Base):
      rrp = Column(Float)
      demand = Column(Float)
      generation = Column(Float)
+
+class interconnect(Base):
+     __tablename__ = 'interconnect-dispatchIS'
+     datetime = Column(DateTime, primary_key=True)
+     interconnectorid = Column(String(100), primary_key=True)
+     meteredmwflow = Column(Float)
+     mwflow = Column(Float)
+     mwlosses = Column(Float)
+     exportlimit = Column(Float)
+     importlimit = Column(Float)
+
 class notices(Base):
      __tablename__ = 'notices'
      id = Column(Integer, primary_key=True)
@@ -161,6 +172,20 @@ def processDispatchIS():
                                }
                                     dispatchISobject = dispatchIS(**dispatchISvalue)
                                     session.merge(dispatchISobject)
+                        elif row[0] == "I" and row[1] == "DISPATCH" and row[2] == "INTERCONNECTORRES":
+                                    columnsinterconnect = row
+                        elif row[2] == "INTERCONNECTORRES":
+                                    interconnectvalue = {
+                               "datetime" : datetime.strptime(row[columnsinterconnect.index("SETTLEMENTDATE")],"%Y/%m/%d %H:%M:%S"),
+                               "interconnectorid" : row[columnsinterconnect.index("INTERCONNECTORID")],
+                               "meteredmwflow" : row[columnsinterconnect.index("METEREDMWFLOW")],
+                               "mwflow" : row[columnsinterconnect.index("MWFLOW")] ,
+                               "mwlosses" : row[columnsinterconnect.index("MWLOSSES")] ,
+                               "exportlimit" : row[columnsinterconnect.index("EXPORTLIMIT")] ,
+                               "importlimit" : row[columnsinterconnect.index("IMPORTLIMIT")] 
+                               }
+                                    interconnectobject = interconnect(**interconnectvalue)
+                                    session.merge(interconnectobject)
                     except(IndexError):
                         pass
                 session.merge(Downloads(url=url))
