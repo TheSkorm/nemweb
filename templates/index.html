@@ -153,6 +153,27 @@ requestPredictions();
     });
 
 
+function loadurl(){
+if(location.hash.indexOf('#') != -1){
+var enable = location.hash.replace("#","").split(",")
+for (i=0; i<$('#container').highcharts().series.length;i++){$('#container').highcharts().series[i].hide()};
+enable.forEach(function (i) {$('#container').highcharts().series[i].show()})
+}
+}
+
+$('#container').bind('mousedown', function() {setTimeout(updateUrl,1000)})
+
+function updateUrl(){
+var url = "";
+for (i=0; i<$('#container').highcharts().series.length;i++){
+if ($('#container').highcharts().series[i].visible){
+url = url + i + ","
+}
+};
+location.hash = url.substr(0,url.length-1)
+}
+
+
 // interconnects
 
         // JSONP request
@@ -192,7 +213,8 @@ $('#container').highcharts().addSeries({yAxis: 1, visible: false, name: intercon
 }
 
 lastdatainter = Date.parse(row[interconnect]['datetime'])
-    });
+loadurl()   
+ });
 
 
 
