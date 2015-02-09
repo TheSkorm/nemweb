@@ -31,8 +31,18 @@
         </div><!--/.nav-collapse -->
       </div>
     </nav>
-
 <div id="container" style="min-width: 310px; height: 600px; margin: 0 auto; padding-top: 80px;"></div>	
+<h2>Interconnect ID Key</h2>
+<ul>
+<li>NSW1-QLD1 QLD to NSW</li>
+<li>VIC1-NSW1 VIC to NSW</li>
+<li>T-V-MNSP1 VIC to TAS</li>
+<li>V-SA VIC to SA</li>
+<li>V-S-MNSP1 VIC to SA</li>
+<li>N-Q-MNSP1 QLD to NSW</li>
+<li>V-SA SA to VIC</li>
+<li>V-S-MNSP1 SA to VIC</li>
+</ul>
 <script src="static/js/bootstrap.min.js"></script>
 <script>
 $(function () {
@@ -91,6 +101,8 @@ alignTicks: false
 <script src="http://code.highcharts.com/modules/exporting.js"></script>
 	<script>
 regions = ["QLD1","NSW1","SA1","TAS1","VIC1"]
+interconnects = ["N-Q-MNSP1","NSW1-QLD1","T-V-MNSP1","V-S-MNSP1","V-SA","VIC1-NSW1"]
+
 
         // JSONP request
         var jsonData = $.ajax({
@@ -136,8 +148,54 @@ $('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region +
 
 setInterval(requestUpdate, 30000);
 setInterval(requestPredictions, 30000);
+setInterval(requestIntUpdate, 30000);
 requestPredictions();
     });
+
+
+// interconnects
+
+        // JSONP request
+        var jsonData = $.ajax({
+          url: '/interconnect',
+          dataType: 'json',
+        }).done(function (results) {
+
+var	data = results['results']
+var exportlimit = {}
+var importlimit = {}
+var mwflow = {}
+for( i =0; i<interconnects.length; i++){
+var interconnect = interconnects[i];
+exportlimit[interconnect] = []
+importlimit[interconnect] = []
+mwflow[interconnect] = []
+}
+
+
+for(i in data){
+var row = data[i];
+for( i =0; i<interconnects.length; i++){
+var interconnect = interconnects[i];
+exportlimit[interconnect].push([Date.parse(row[interconnect]['datetime']),row[interconnect]['exportlimit']]);
+importlimit[interconnect].push([Date.parse(row[interconnect]['datetime']),row[interconnect]['importlimit']]);
+mwflow[interconnect].push([Date.parse(row[interconnect]['datetime']),row[interconnect]['mwflow']]);
+}
+
+          };
+
+for( i =0; i<interconnects.length; i++){
+var interconnect = interconnects[i]; // TODO clean this up
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: interconnect + " import limit", data: importlimit[interconnect],   marker : {enabled :false} });
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: interconnect + " export limit", data: exportlimit[interconnect],   marker : {enabled :false} });
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: interconnect + " MW flow", data: mwflow[interconnect],   marker : {enabled :false} });
+}
+
+lastdatainter = Date.parse(row[interconnect]['datetime'])
+    });
+
+
+
 
 function requestUpdate(){
         var jsonData = $.ajax({
@@ -145,6 +203,15 @@ function requestUpdate(){
           dataType: 'json',
         }).done(function (update) {
 processUpdate(update['update']);
+})
+
+}
+function requestIntUpdate(){
+        var jsonData = $.ajax({
+          url: '/interconnect-update',
+          dataType: 'json',
+        }).done(function (update) {
+processInterconnectUpdate(update['update']);
 })
 
 }
@@ -172,6 +239,37 @@ $('#container').highcharts().series[regions.indexOf(region)*6+4].addPoint([Date.
 }}
 lastdata = Date.parse(row[region]['datetime']);
 }
+
+function processInterconnectUpdate(data){
+var exportlimit = {}
+var importlimit = {}
+var mwflow = {}
+for( i =0; i<interconnects.length; i++){
+var interconnect = interconnects[i];
+exportlimit[interconnect] = []
+importlimit[interconnect] = []
+mwflow[interconnect] = []
+}
+
+for(i in data){
+var row = data[i];
+for( i =0; i< interconnects.length; i++){
+var interconnect = interconnects[i];
+var regionoffset = regions.length*6;
+if (Date.parse(row[interconnect]['datetime']) >  lastdatainter) {
+$('#container').highcharts().series[interconnects.indexOf(interconnect)*3+regionoffset].addPoint([Date.parse(row[interconnect]['datetime']),row[interconnect]['importlimit']],true, true);
+$('#container').highcharts().series[interconnects.indexOf(interconnect)*3+1+regionoffset].addPoint([Date.parse(row[interconnect]['datetime']),row[interconnect]['exportimit']], true, true);
+$('#container').highcharts().series[interconnects.indexOf(interconnect)*3+2+regionoffset].addPoint([Date.parse(row[interconnect]['datetime']),row[interconnect]['mwflow']], true, true);
+}
+}}
+lastdatainter = Date.parse(row[interconnect]['datetime']);
+}
+
+
+
+
+
+
 function requestPredictions(){
         var jsonData = $.ajax({
           url: '/predictions',
@@ -181,6 +279,7 @@ processPredictions(update['results']);
 })
 
 }
+
 
 function processPredictions(data){
 var price = {}

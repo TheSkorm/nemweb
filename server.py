@@ -140,6 +140,7 @@ def predictions():
          export[str(item['datetime'])][item['regionid']] = item
                
     return flask.jsonify(results=export)
+
 @app.route("/update")
 def update():
     s = session.query(dispatchIS).filter(dispatchIS.datetime > datetime.now() - timedelta(hours=1))
@@ -149,6 +150,18 @@ def update():
          if str(item['datetime']) not in export:
               export[str(item['datetime'])] = {}
          export[str(item['datetime'])][item['regionid']] = item
+               
+    return flask.jsonify(update=export)
+
+@app.route("/interconnect-update")
+def interconnectupdate():
+    s = session.query(interconnect).filter(interconnect.datetime > datetime.now() - timedelta(hours=1))
+    export = {}
+    for item in s:
+         item = item.as_dict()
+         if str(item['datetime']) not in export:
+              export[str(item['datetime'])] = {}
+         export[str(item['datetime'])][item['interconnectorid']] = item
                
     return flask.jsonify(update=export)
 
