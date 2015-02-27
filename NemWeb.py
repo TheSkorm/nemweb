@@ -76,6 +76,10 @@ class notices(Base):
      datetime = Column(DateTime)
      message = Column(String(500))
      url = Column(String(255))
+class DUID(Base):
+     __tablename__ = 'duid'
+     id = Column(String(255), primary_key=True)
+     twitter = Column(String(255))
       
 
         
@@ -236,6 +240,11 @@ def processNotices():
                         notice = "#" + constraint + " " + amount + " - " + notice
                     else:
                         notice = "#" + constraint + " - " + notice
+                elif "Unit:" in line:
+                    unit = line.split(":",1)[-1].strip()
+                    twitterhandles = session.query(DUID).filter(DUID.id==unit)
+                    for handle in twitterhandles:
+                        notice = "@" + handle.twitter  +" " +notice
                 elif "Amount:" in line:
                     amount = line.split(":",1)[-1].strip()
             urlviewer=url.replace("http://www.nemweb.com.au/Reports/CURRENT/Market_Notice/","http://nem.mwheeler.org/notice/")

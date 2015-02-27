@@ -147,6 +147,7 @@ $('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region +
 setInterval(requestUpdate, 30000);
 setInterval(requestPredictions, 30000);
 setInterval(requestIntUpdate, 30000);
+loadinterconnects();
 requestPredictions();
     });
 
@@ -173,7 +174,7 @@ location.hash = url.substr(0,url.length-1)
 
 
 // interconnects
-
+function loadinterconnects(){
         // JSONP request
         var jsonData = $.ajax({
           url: '/interconnect',
@@ -213,7 +214,7 @@ $('#container').highcharts().addSeries({yAxis: 1, visible: false, name: intercon
 lastdatainter = Date.parse(row[interconnect]['datetime'])
 loadurl()   
  });
-
+}
 
 
 
