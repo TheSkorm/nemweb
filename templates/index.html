@@ -124,7 +124,7 @@ for(i in data){
 var row = data[i];
 for( i =0; i<regions.length; i++){
 var region = regions[i];
-price[region].push([Date.parse(row[region]['datetime']),row[region]['rrp']]);
+price[region].push([Date.parse(row[region]['datetime']),Math.max(row[region]['rrp'],0.001)]);
 generation[region].push([Date.parse(row[region]['datetime']),row[region]['generation']]);
 demand[region].push([Date.parse(row[region]['datetime']),row[region]['demand']]);
 lastdata = Date.parse(row[region]['datetime'])
@@ -253,7 +253,7 @@ var row = data[i];
 for( i =0; i<regions.length; i++){
 var region = regions[i];
 if (Date.parse(row[region]['datetime']) >  lastdata) {
-$('#container').highcharts().series[regions.indexOf(region)*6].addPoint([Date.parse(row[region]['datetime']),row[region]['rrp']],true, true);
+$('#container').highcharts().series[regions.indexOf(region)*6].addPoint([Date.parse(row[region]['datetime']),Math.max(row[region]['rrp'],0.001)],true, true);
 $('#container').highcharts().series[regions.indexOf(region)*6+2].addPoint([Date.parse(row[region]['datetime']),row[region]['generation']], true, true);
 $('#container').highcharts().series[regions.indexOf(region)*6+4].addPoint([Date.parse(row[region]['datetime']),row[region]['demand']], true, true);
 }
@@ -320,7 +320,7 @@ for(i in data){
 var row = data[i];
 for( i =0; i<regions.length; i++){
 var region = regions[i];
-$('#container').highcharts().series[regions.indexOf(region)*6+1].addPoint([Date.parse(row[region]['datetime']),row[region]['rrp']],false);
+$('#container').highcharts().series[regions.indexOf(region)*6+1].addPoint([Date.parse(row[region]['datetime']),Math.max(row[region]['rrp'],0.001)],false);
 $('#container').highcharts().series[regions.indexOf(region)*6+3].addPoint([Date.parse(row[region]['datetime']),row[region]['generation']],false);
 $('#container').highcharts().series[regions.indexOf(region)*6+5].addPoint([Date.parse(row[region]['datetime']),row[region]['demand']],false);
 }}
