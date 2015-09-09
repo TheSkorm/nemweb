@@ -1,0 +1,170 @@
+{% raw %}
+<!doctype html>
+<html>
+<head>
+	<title>NemWeb</title>
+	<meta charset="utf-8">
+<meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">	
+  <link href="static/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src= "https://ajax.googleapis.com/ajax/libs/angularjs/1.3.2/angular.min.js"></script>
+
+<script>
+/*
+  var jsonData = $.ajax({
+          url: '/stations-data',
+          dataType: 'json',
+        }).done(function (results) {
+
+console.log(results);
+});
+  var jsonData = $.ajax({
+          url: '/scada',
+          dataType: 'json',
+        }).done(function (results) {
+
+console.log(results);
+});
+*/
+
+var app = angular.module('nemweb', []);
+var controller = app.controller('generators', function($scope, $http, $timeout) {
+  $scope.sortType     = 'StationName'; // set the default sort type
+  $scope.sortReverse  = false;  // set the default sort order
+  $scope.searchTerm   = '';     // set the default search/filter term
+    $scope.results={}
+    $scope.getData = function(){
+        $http.get("/stations-data").success(function (response) {jQuery.extend($scope.results, response.results)});
+        $http.get("/scada").success(function (response) { jQuery.extend(true, $scope.results, response.results)});
+    };
+    $scope.getData();
+    $scope.intervalFunction = function(){
+     $timeout(function() {
+       $scope.getData();
+       $scope.intervalFunction();
+      }, 60000)
+    };
+    $scope.intervalFunction();
+
+}).filter('toArray', function () {
+    'use strict';
+
+    return function (obj) {
+        if (!(obj instanceof Object)) {
+            return obj;
+        }
+        var result = [];
+        angular.forEach(obj, function(obj, key) {
+            obj.$key = key;
+            result.push(obj);
+        });
+        return result;
+    }
+});
+
+
+</script>
+
+</head>
+<body>
+  <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">Nemweb</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="/">Home</a></li>
+            <li class="active"><a href="/stations">Stations</a></li>
+            <li><a href="https://twitter.com/au_nem">Twitter</a></li>
+            <li><a href="mailto:nem@mwheeler.org">Contact</a></li>
+            <li><a href="https://github.com/TheSkorm/nemweb">Source</a></li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+<div ng-app="nemweb" ng-controller="generators" style="min-width: 310px; height: 600px; margin: 0 auto; padding-top: 80px;">
+
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">Generators</div>
+  <div class="panel-body">
+    <p>List of generators</p>
+ <form>
+    <div class="form-group">
+      <div class="input-group">
+        <div class="input-group-addon"><i class="fa fa-search"></i></div>
+        <input type="text" class="form-control" placeholder="Search" ng-model="searchTerm">
+      </div>      
+    </div>
+  </form>
+  </div>
+<table class="table table-bordered table-striped">
+  <thead>
+	<th>
+          <a href="#" ng-click="sortType = 'StationName'; sortReverse = !sortReverse">
+            Station Name
+            <span ng-show="sortType == 'StationName' && !sortReverse" class="fa fa-caret-down"></span>
+            <span ng-show="sortType == 'StationName' && sortReverse" class="fa fa-caret-up"></span>
+          </a>
+        </th>
+	<th>
+          <a href="#" ng-click="sortType = 'Tech'; sortReverse = !sortReverse">
+            Generation Tech
+            <span ng-show="sortType == 'Tech' && !sortReverse" class="fa fa-caret-down"></span>
+            <span ng-show="sortType == 'Tech' && sortReverse" class="fa fa-caret-up"></span>
+          </a>
+        </th>
+	<th>
+          <a href="#" ng-click="sortType = 'FuelSourceDescriptior'; sortReverse = !sortReverse">
+            Fuel Source
+            <span ng-show="sortType == 'FuelSourceDescriptior' && !sortReverse" class="fa fa-caret-down"></span>
+            <span ng-show="sortType == 'FuelSourceDescriptior' && sortReverse" class="fa fa-caret-up"></span>
+          </a>
+        </th>
+	<th>
+          <a href="#" ng-click="sortType = 'TechDescription'; sortReverse = !sortReverse">
+            Generation Tech
+            <span ng-show="sortType == 'TechDescription' && !sortReverse" class="fa fa-caret-down"></span>
+            <span ng-show="sortType == 'TechDescription' && sortReverse" class="fa fa-caret-up"></span>
+          </a>
+        </th>
+	<th>
+          <a href="#" ng-click="sortType = 'SCADAVALUE'; sortReverse = !sortReverse">
+            Generated Load
+            <span ng-show="sortType == 'SCADAVALUE' && !sortReverse" class="fa fa-caret-down"></span>
+            <span ng-show="sortType == 'SCADAVALUE' && sortReverse" class="fa fa-caret-up"></span>
+          </a>
+        </th>
+</thead>
+  <tr ng-repeat="x in results | toArray | orderBy:sortType:sortReverse | filter:searchTerm" ng-if="x.SCADAVALUE || x.SCADAVALUE==0">
+    <td ng-if="x.StationName">{{ x.StationName }}</td>
+    <td ng-if="!x.StationName">{{ x.DUID }}</td>
+    <td>{{ x.Tech }}</td>
+    <td>{{ x.FuelSourceDescriptior }}</td>
+    <td>{{ x.TechDescription }}</td>
+<td>
+<div class="progress">
+  <div class="progress-bar progress-bar-warning progress-bar-striped" role="progressbar" aria-valuenow="{{ x.SCADAVALUE | number }}" aria-valuemin="0" aria-valuemax="{{ x.regcap | number }}" style="min-width: 4em; width: {{( x.SCADAVALUE | number) / (x.regcap | number)*100}}%;">
+    {{ x.SCADAVALUE | number }} MW
+  </div>
+</div>
+</td>
+<!--    <td>{{ x.SCADAVALUE | number }}</td>
+    <td>{{ x.regcap | number }}</td> -->
+  </tr>
+</table>
+</div>
+
+</div>
+</body>
+</html>
+{% endraw %}

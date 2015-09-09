@@ -1,5 +1,5 @@
 from flask import Flask, render_template 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float  
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, func
 from sqlalchemy.ext.declarative import declarative_base  
 from sqlalchemy.orm import sessionmaker 
 from datetime import timedelta, datetime
@@ -14,7 +14,7 @@ from flask.ext.compress import Compress
 compress = Compress()
  
 app = Flask(__name__) 
-app.debug = False
+app.debug = True
 Compress(app)
 
 config = configparser.ConfigParser()
@@ -65,6 +65,23 @@ class interconnect(Base):
      def as_dict(self):
           return {c.name: getattr(self, c.name) for c in self.__table__.columns}
   
+class stationdata(Base):
+     __tablename__ = 'stationdata'
+     DUID = Column(String(255), primary_key=True)
+     regcap = Column(Float)
+     FuelSource = Column(String(255))
+     FuelSourceDescriptior = Column(String(255))
+     Tech = Column(String(255))
+     TechDescription = Column(String(255))
+     Participant = Column(String(255))
+     StationName = Column(String(255))
+     def as_dict(self):
+          return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+class DispatchSCADA(Base):
+     __tablename__ = 'DispatchSCADA'
+     DUID = Column(String(255), primary_key=True)
+     SETTLEMENTDATE = Column(DateTime, primary_key=True)
+     SCADAVALUE = Column(Float)
   
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine, autocommit=True)
@@ -105,7 +122,33 @@ def notice(id):
 @app.route("/")
 def index():
     return render_template('index.html')
+@app.route("/stations")
+def stations():
+    return render_template('stations.html')
 
+
+@app.route("/stations-data")
+def stationsdata():
+    export = {}
+    s = session.query(stationdata).all()
+    for item in s:
+         item = item.as_dict()
+         export[item['DUID']] = item  
+    return flask.jsonify(results=export)
+
+@app.route("/scada")
+def scada():
+    export = {}
+    s = engine.execute("select * from DispatchSCADA where SETTLEMENTDATE = (select MAX(SETTLEMENTDATE) from DispatchSCADA);")
+#    s = session.query(DispatchSCADA, DispatchSCADA.SETTLEMENTDATE == func.max(DispatchSCADA.SETTLEMENTDATE)).all()
+    for item in s:
+         print(dir(item))
+         print(item['DUID'])
+#         item.pop("_sa_instance_state", None)
+         item = dict(item.items())
+         item['SETTLEMENTDATE'] = str(item['SETTLEMENTDATE'])
+         export[item['DUID']]=item
+    return flask.jsonify(results=export)
 	
 @app.route("/dispatch")
 def dispatch():
@@ -167,4 +210,4 @@ def interconnectupdate():
 
 	
 if __name__ == "__main__":
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=9999)

@@ -34,7 +34,8 @@ urls = {
 	"base": "http://www.nemweb.com.au/",
 	"p5": "http://www.nemweb.com.au/Reports/CURRENT/P5_Reports/",
 	"dispatchis": "http://www.nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/",
-	"notices": "http://www.nemweb.com.au/Reports/CURRENT/Market_Notice/"
+	"notices": "http://www.nemweb.com.au/Reports/CURRENT/Market_Notice/",
+	"scada": "http://nemweb.com.au/Reports/CURRENT/Dispatch_SCADA/"
 }
 
 engine = create_engine(config["database"]["dbstring"])
@@ -81,6 +82,22 @@ class DUID(Base):
      id = Column(String(255), primary_key=True)
      twitter = Column(String(255))
       
+class stationdata(Base):
+     __tablename__ = 'stationdata'
+     DUID = Column(String(255), primary_key=True)
+     regcap = Column(Float)
+     FuelSource = Column(String(255))
+     FuelSourceDescriptior = Column(String(255))
+     Tech = Column(String(255))
+     TechDescription = Column(String(255))
+     Participant = Column(String(255))
+     StationName = Column(String(255))
+
+class DispatchSCADA(Base):
+     __tablename__ = 'DispatchSCADA'
+     DUID = Column(String(255), primary_key=True)
+     SETTLEMENTDATE = Column(DateTime, primary_key=True)
+     SCADAVALUE = Column(Float)
 
         
 Base.metadata.create_all(engine) 
@@ -258,12 +275,50 @@ def processNotices():
             session.commit()
             print(traceback.format_exc())
 
+def listSCADAFiles():
+    scadaurls=[]
+    indexpage = urllib.request.urlopen(urls['scada']).read()
+    soup = BeautifulSoup(indexpage)
+    for link in soup.find_all('a'):
+        url = link.get('href').lstrip("/")
+        if url[-4:] == ".zip" and urlDownloaded(url) == False:
+            scadaurls.append(urls['base'] + url)
+    return scadaurls
+def processSCADA():
+    for url in listSCADAFiles():
+        try:
+                print("Downloading " + url)
+                files = ZipFile(BytesIO(urllib.request.urlopen(url).read()))
+                data = files.read(files.namelist()[0])
+                data = data.decode('utf-8').split("\n")
+                csvfile = csv.reader(data)
+                for row in csvfile:
+                        try:
+                                if row[0] == "I" and row[1] == "DISPATCH" and row[2] == "UNIT_SCADA":
+                                        columns = row
+                                elif row[2] == "UNIT_SCADA":
+                                        scadavalue = {
+                               "SETTLEMENTDATE" : datetime.strptime(row[columns.index("SETTLEMENTDATE")], "%Y/%m/%d %H:%M:%S"),
+                               "DUID" : row[columns.index("DUID")],
+                               "SCADAVALUE" : row[columns.index("SCADAVALUE")]
+                               }
+                                        scadadbobject = DispatchSCADA(**scadavalue)
+                                        session.merge(scadadbobject)
+                        except(IndexError):
+                                pass
+                session.merge(Downloads(url=url))
+                session.commit()
+        except Exception as e:
+            session.merge(Downloads(url=url))
+            session.commit()
+            print(traceback.format_exc())
         
 while 1:
     try:
             processP5()
             processDispatchIS()
             processNotices()
+            processSCADA()
             time.sleep(30)
     except Exception as e:
             print(traceback.format_exc())
