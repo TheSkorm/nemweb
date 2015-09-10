@@ -188,7 +188,7 @@ $scope.getDUIDHistory(location.hash.replace("#",""))
        $scope.activeDUID = DUID
        console.log(DUID)
        $scope.DUIDHistory={}
-       $http.get("/station-history/"+DUID).success(function (response) {$scope.DUIDHistory = response.results
+       $http.get("/station-history/"+escape(DUID).replace("/","-slash-")).success(function (response) {$scope.DUIDHistory = response.results
 	var array = $.map($scope.DUIDHistory, function(value, index) {
 	return [[Date.parse(value.SETTLEMENTDATE), value.SCADAVALUE]];
 	});

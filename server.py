@@ -159,6 +159,7 @@ def co2factor():
 
 @app.route("/station-history/<duid>")
 def stationhistory(duid):
+    duid = duid.replace("-slash-","/")
     s = session.query(DispatchSCADA).filter(DispatchSCADA.SETTLEMENTDATE > datetime.now() - timedelta(hours=72)).filter(DispatchSCADA.DUID == duid)
     export = {}
     for item in s:
