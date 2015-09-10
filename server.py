@@ -82,6 +82,8 @@ class DispatchSCADA(Base):
      DUID = Column(String(255), primary_key=True)
      SETTLEMENTDATE = Column(DateTime, primary_key=True)
      SCADAVALUE = Column(Float)
+     def as_dict(self):
+          return {c.name: getattr(self, c.name) for c in self.__table__.columns}
   
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine, autocommit=True)
@@ -135,6 +137,17 @@ def stationsdata():
          item = item.as_dict()
          export[item['DUID']] = item  
     return flask.jsonify(results=export)
+
+@app.route("/station-history/<duid>")
+def stationhistory(duid):
+    s = session.query(DispatchSCADA).filter(DispatchSCADA.SETTLEMENTDATE > datetime.now() - timedelta(hours=72)).filter(DispatchSCADA.DUID == duid)
+    export = {}
+    for item in s:
+         item = item.as_dict()
+         #item['SETTLEMENTDATE'] = str(item['SETTLEMENTDATE'])
+         export[str(item['SETTLEMENTDATE'])]=item
+    return flask.jsonify(results=export)
+
 
 @app.route("/scada")
 def scada():

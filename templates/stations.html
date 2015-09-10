@@ -8,64 +8,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">	
   <link href="static/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 <script src= "https://ajax.googleapis.com/ajax/libs/angularjs/1.3.2/angular.min.js"></script>
-
-<script>
-/*
-  var jsonData = $.ajax({
-          url: '/stations-data',
-          dataType: 'json',
-        }).done(function (results) {
-
-console.log(results);
-});
-  var jsonData = $.ajax({
-          url: '/scada',
-          dataType: 'json',
-        }).done(function (results) {
-
-console.log(results);
-});
-*/
-
-var app = angular.module('nemweb', []);
-var controller = app.controller('generators', function($scope, $http, $timeout) {
-  $scope.sortType     = 'StationName'; // set the default sort type
-  $scope.sortReverse  = false;  // set the default sort order
-  $scope.searchTerm   = '';     // set the default search/filter term
-    $scope.results={}
-    $scope.getData = function(){
-        $http.get("/stations-data").success(function (response) {jQuery.extend($scope.results, response.results)});
-        $http.get("/scada").success(function (response) { jQuery.extend(true, $scope.results, response.results)});
-    };
-    $scope.getData();
-    $scope.intervalFunction = function(){
-     $timeout(function() {
-       $scope.getData();
-       $scope.intervalFunction();
-      }, 60000)
-    };
-    $scope.intervalFunction();
-
-}).filter('toArray', function () {
-    'use strict';
-
-    return function (obj) {
-        if (!(obj instanceof Object)) {
-            return obj;
-        }
-        var result = [];
-        angular.forEach(obj, function(obj, key) {
-            obj.$key = key;
-            result.push(obj);
-        });
-        return result;
-    }
-});
-
-
-</script>
+-->
+<script src="static/bower_components/angular/angular.min.js"></script>
+<script src="static/bower_components/jquery/dist/jquery.min.js"></script>
+<script src="static/bower_components/highcharts-ng/dist/highcharts-ng.min.js"></script>
+<script src="http://code.highcharts.com/highcharts.src.js"></script>
 
 </head>
 <body>
@@ -98,6 +47,7 @@ var controller = app.controller('generators', function($scope, $http, $timeout) 
   <div class="panel-heading">Generators</div>
   <div class="panel-body">
     <p>List of generators</p>
+<highchart id="chart1" config="chartConfig"></highchart>
  <form>
     <div class="form-group">
       <div class="input-group">
@@ -145,9 +95,9 @@ var controller = app.controller('generators', function($scope, $http, $timeout) 
           </a>
         </th>
 </thead>
-  <tr ng-repeat="x in results | toArray | orderBy:sortType:sortReverse | filter:searchTerm" ng-if="x.SCADAVALUE || x.SCADAVALUE==0">
-    <td ng-if="x.StationName">{{ x.StationName }}</td>
-    <td ng-if="!x.StationName">{{ x.DUID }}</td>
+  <tr ng-click="getDUIDHistory(x.DUID)" ng-repeat="x in results | toArray | orderBy:sortType:sortReverse | filter:searchTerm" ng-if="x.SCADAVALUE || x.SCADAVALUE==0">
+    <td ng-if="x.StationName"  >{{ x.StationName }} ({{ x.DUID }})</td>
+    <td ng-if="!x.StationName" >{{ x.DUID }}</td>
     <td>{{ x.Tech }}</td>
     <td>{{ x.FuelSourceDescriptior }}</td>
     <td>{{ x.TechDescription }}</td>
@@ -165,6 +115,122 @@ var controller = app.controller('generators', function($scope, $http, $timeout) 
 </div>
 
 </div>
+<script>
+/*
+  var jsonData = $.ajax({
+          url: '/stations-data',
+          dataType: 'json',
+        }).done(function (results) {
+
+console.log(results);
+});
+  var jsonData = $.ajax({
+          url: '/scada',
+          dataType: 'json',
+        }).done(function (results) {
+
+console.log(results);
+});
+*/
+
+var app = angular.module('nemweb', ["highcharts-ng"]);
+var controller = app.controller('generators', function($scope, $http, $timeout) {
+  $scope.sortType     = 'StationName'; // set the default sort type
+  $scope.sortReverse  = false;  // set the default sort order
+  $scope.searchTerm   = '';     // set the default search/filter term
+  $scope.activeDUID = '';
+  $scope.chartConfig = {
+  options: {
+      chart: {
+          type: 'line'
+      },
+      tooltip: {
+          style: {
+              padding: 10,
+              fontWeight: 'bold'
+          }
+      }
+  },
+  series: [{
+     data: []
+  }],
+  title: {
+     text: 'Powerstation Graph'
+  },
+yAxis:{
+            title: {
+                text: 'MW',
+            },
+            labels: {
+                format: '{value:.2f} MW',
+            },
+        tooltip: {
+            valueSuffix: 'MW'
+        }
+},
+xAxis: {
+            type: 'datetime',
+            dateTimeLabelFormats: { // don't display the dummy year
+                month: '%e. %b',
+                year: '%b'
+            }
+        }
+};
+console.log($scope.chartConfig.series.data)
+    $http.get("/stations-data").success(function (response) {$scope.results = response.results;
+ $scope.getData();
+if(location.hash.indexOf('#') != -1){
+$scope.getDUIDHistory(location.hash.replace("#",""))
+}
+});
+    
+    $scope.getDUIDHistory = function (DUID) {
+       $scope.activeDUID = DUID
+       console.log(DUID)
+       $scope.DUIDHistory={}
+       $http.get("/station-history/"+DUID).success(function (response) {$scope.DUIDHistory = response.results
+	var array = $.map($scope.DUIDHistory, function(value, index) {
+	return [[Date.parse(value.SETTLEMENTDATE), value.SCADAVALUE]];
+	});
+       $scope.chartConfig.title.text = $scope.results[$scope.activeDUID].StationName + " Powerstation Graph"
+       $scope.chartConfig.series[0].data = array
+       $scope.chartConfig.series[0].name = $scope.results[$scope.activeDUID].StationName + " (" +$scope.activeDUID + ")"
+location.hash = $scope.activeDUID
+});
+    }
+
+    $scope.getData = function(){
+        $http.get("/scada").success(function (response) { jQuery.extend(true, $scope.results, response.results)});
+    };
+    $scope.intervalFunction = function(){
+     $timeout(function() {
+       $scope.getData();
+       $scope.intervalFunction();
+      }, 60000)
+    };
+    $scope.intervalFunction();
+
+
+
+}).filter('toArray', function () {
+    'use strict';
+
+    return function (obj) {
+        if (!(obj instanceof Object)) {
+            return obj;
+        }
+        var result = [];
+        angular.forEach(obj, function(obj, key) {
+            obj.$key = key;
+            result.push(obj);
+        });
+        return result;
+    }
+});
+
+
+</script>
+
 </body>
 </html>
 {% endraw %}
