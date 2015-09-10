@@ -35,7 +35,8 @@ urls = {
 	"p5": "http://www.nemweb.com.au/Reports/CURRENT/P5_Reports/",
 	"dispatchis": "http://www.nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/",
 	"notices": "http://www.nemweb.com.au/Reports/CURRENT/Market_Notice/",
-	"scada": "http://nemweb.com.au/Reports/CURRENT/Dispatch_SCADA/"
+	"scada": "http://nemweb.com.au/Reports/CURRENT/Dispatch_SCADA/",
+        "co2": "http://nemweb.com.au/reports/current/cdeii/"
 }
 
 engine = create_engine(config["database"]["dbstring"])
@@ -99,6 +100,11 @@ class DispatchSCADA(Base):
      SETTLEMENTDATE = Column(DateTime, primary_key=True)
      SCADAVALUE = Column(Float)
 
+class CO2Factor(Base):
+     __tablename__ = 'CO2Factor'
+     DUID = Column(String(255), primary_key=True)
+     ReportDate = Column(DateTime, primary_key=True)
+     Factor = Column(Float)
         
 Base.metadata.create_all(engine) 
 Session = sessionmaker(bind=engine)
@@ -109,6 +115,50 @@ def urlDownloaded(url):
         return True
     else:
         return False
+
+def listCO2Files():
+    co2urls=[]
+    indexpage = urllib.request.urlopen(urls['co2']).read()
+    soup = BeautifulSoup(indexpage)
+    for link in soup.find_all('a'):
+        url = link.get('href').lstrip("/")
+        if url[-4:] == ".CSV" and "CO2EII_AVAILABLE_GENERATORS" in url and urlDownloaded(url) == False:
+            co2urls.append(urls['base'] + url)
+    return co2urls
+
+def processCO2():
+    for url in listCO2Files():
+        try:
+                print("Downloading " + url)
+                data = urllib.request.urlopen(url).read()
+                data = data.decode('utf-8').split("\n")
+                csvfile = csv.reader(data)
+                date = ""
+                time = ""
+                for row in csvfile:
+                        try:
+                                if row[0] == "I" and row[1] == "CO2EII" and row[2] == "PUBLISHING":
+                                        columns = row
+                                elif row[2] == "CO2EII_AVAILABLE_GENERATORS":
+                                        date = row[5]
+                                        time = row[6]
+                                elif row[2] == "PUBLISHING":
+                                        co2value = {
+                               "ReportDate" : datetime.strptime(date + " " + time, "%Y/%m/%d %H:%M:%S"),
+                               "DUID" : row[columns.index("DUID")],
+                               "Factor" : row[columns.index("CO2E_EMISSIONS_FACTOR")]
+                               }
+                                        co2dbobject = CO2Factor(**co2value)
+                                        session.merge(co2dbobject)
+                        except(IndexError):
+                                pass
+                session.merge(Downloads(url=url))
+                session.commit()
+        except Exception as e:
+            session.merge(Downloads(url=url))
+            session.commit()
+            print(traceback.format_exc())
+
 
 #returns list of P5 files as an array of urls
 def listP5Files():
@@ -315,6 +365,7 @@ def processSCADA():
         
 while 1:
     try:
+            processCO2()
             processP5()
             processDispatchIS()
             processNotices()

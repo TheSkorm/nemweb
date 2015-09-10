@@ -84,6 +84,15 @@ class DispatchSCADA(Base):
      SCADAVALUE = Column(Float)
      def as_dict(self):
           return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
+class CO2Factor(Base):
+     __tablename__ = 'CO2Factor'
+     DUID = Column(String(255), primary_key=True)
+     ReportDate = Column(DateTime, primary_key=True)
+     Factor = Column(Float)
+     def as_dict(self):
+          return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
   
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine, autocommit=True)
@@ -138,6 +147,16 @@ def stationsdata():
          export[item['DUID']] = item  
     return flask.jsonify(results=export)
 
+@app.route("/co2-factor")
+def co2factor():
+    export = {}
+#    s = session.query(CO2Factor).all()
+    s = engine.execute("select * from CO2Factor where ReportDate = (select MAX(ReportDate) from CO2Factor);")
+    for item in s:
+         item = dict(item.items())
+         export[item['DUID']] = item  
+    return flask.jsonify(results=export)
+
 @app.route("/station-history/<duid>")
 def stationhistory(duid):
     s = session.query(DispatchSCADA).filter(DispatchSCADA.SETTLEMENTDATE > datetime.now() - timedelta(hours=72)).filter(DispatchSCADA.DUID == duid)
@@ -148,6 +167,18 @@ def stationhistory(duid):
          export[str(item['SETTLEMENTDATE'])]=item
     return flask.jsonify(results=export)
 
+@app.route("/stations-now")
+def stationsnow():
+    s = session.query(DispatchSCADA).filter(DispatchSCADA.SETTLEMENTDATE > datetime.now() - timedelta(hours=3))
+    export = {}
+    for item in s:
+         item = item.as_dict()
+         #item['SETTLEMENTDATE'] = str(item['SETTLEMENTDATE'])
+         if item['DUID'] not in export:
+             export[item['DUID']] = []
+         export[item['DUID']].append(item)
+    return flask.jsonify(results=export)
+
 
 @app.route("/scada")
 def scada():
@@ -155,9 +186,6 @@ def scada():
     s = engine.execute("select * from DispatchSCADA where SETTLEMENTDATE = (select MAX(SETTLEMENTDATE) from DispatchSCADA);")
 #    s = session.query(DispatchSCADA, DispatchSCADA.SETTLEMENTDATE == func.max(DispatchSCADA.SETTLEMENTDATE)).all()
     for item in s:
-         print(dir(item))
-         print(item['DUID'])
-#         item.pop("_sa_instance_state", None)
          item = dict(item.items())
          item['SETTLEMENTDATE'] = str(item['SETTLEMENTDATE'])
          export[item['DUID']]=item
