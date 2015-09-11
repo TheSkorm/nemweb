@@ -137,6 +137,10 @@ def index():
 def stations():
     return render_template('stations.html')
 
+@app.route("/env")
+def env():
+    return render_template('env.html')
+
 
 @app.route("/stations-data")
 def stationsdata():
@@ -187,7 +191,14 @@ def scada():
     s = engine.execute("select * from DispatchSCADA where SETTLEMENTDATE = (select MAX(SETTLEMENTDATE) from DispatchSCADA);")
 #    s = session.query(DispatchSCADA, DispatchSCADA.SETTLEMENTDATE == func.max(DispatchSCADA.SETTLEMENTDATE)).all()
     for item in s:
+	 #cos = engine.execute("select * from CO2Factor where ReportDate = (select MAX(ReportDate) from CO2Factor);").all()
          item = dict(item.items())
+         try:
+             cos = session.query(CO2Factor, CO2Factor.ReportDate == func.max(CO2Factor.ReportDate)).filter(CO2Factor.DUID == item['DUID']).all()
+             print(cos[0][0].Factor)
+             item['CO2E'] = cos[0][0].Factor * item['SCADAVALUE']
+         except:
+             pass
          item['SETTLEMENTDATE'] = str(item['SETTLEMENTDATE'])
          export[item['DUID']]=item
     return flask.jsonify(results=export)
