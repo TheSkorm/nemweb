@@ -195,7 +195,6 @@ def scada():
          item = dict(item.items())
          try:
              cos = session.query(CO2Factor, CO2Factor.ReportDate == func.max(CO2Factor.ReportDate)).filter(CO2Factor.DUID == item['DUID']).all()
-             print(cos[0][0].Factor)
              item['CO2E'] = cos[0][0].Factor * item['SCADAVALUE']
          except:
              pass

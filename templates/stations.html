@@ -96,7 +96,7 @@
           </a>
         </th>
 </thead>
-  <tr ng-click="getDUIDHistory(x.DUID)" ng-repeat="x in results | toArray | orderBy:sortType:sortReverse | filter:searchTerm" ng-if="x.SCADAVALUE || x.SCADAVALUE==0">
+  <tr ng-click="getDUIDHistory(x.DUID, $event)" ng-repeat="x in results | toArray | orderBy:sortType:sortReverse | filter:searchTerm" ng-if="x.SCADAVALUE || x.SCADAVALUE==0">
     <td ng-if="x.StationName"  >{{ x.StationName }} ({{ x.DUID }})</td>
     <td ng-if="!x.StationName" >{{ x.DUID }}</td>
     <td>{{ x.Tech }}</td>
@@ -104,7 +104,7 @@
     <td>{{ x.TechDescription }}</td>
 <td>
 <div class="progress">
-  <div class="progress-bar progress-bar-warning progress-bar-striped" role="progressbar" aria-valuenow="{{ x.SCADAVALUE | number }}" aria-valuemin="0" aria-valuemax="{{ x.regcap | number }}" style="min-width: 4em; width: {{( x.SCADAVALUE | number) / (x.regcap | number)*100}}%;">
+  <div ng-class="{'progress-bar-warning': x.SCADAVALUE>=x.regcap*0.8, 'progress-bar-danger': x.SCADAVALUE>x.regcap}" class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" aria-valuenow="{{ x.SCADAVALUE | number }}" aria-valuemin="0" aria-valuemax="{{ x.regcap | number }}" style="min-width: 4em; width: {{( x.SCADAVALUE | number) / (x.regcap | number)*100}}%;">
     {{ x.SCADAVALUE | number }} MW
   </div>
 </div>
@@ -117,22 +117,6 @@
 
 </div>
 <script>
-/*
-  var jsonData = $.ajax({
-          url: '/stations-data',
-          dataType: 'json',
-        }).done(function (results) {
-
-console.log(results);
-});
-  var jsonData = $.ajax({
-          url: '/scada',
-          dataType: 'json',
-        }).done(function (results) {
-
-console.log(results);
-});
-*/
 
 var app = angular.module('nemweb', ["highcharts-ng"]);
 var controller = app.controller('generators', function($scope, $http, $timeout) {
@@ -181,11 +165,11 @@ console.log($scope.chartConfig.series.data)
     $http.get("/stations-data").success(function (response) {$scope.results = response.results;
  $scope.getData();
 if(location.hash.indexOf('#') != -1){
-$scope.getDUIDHistory(location.hash.replace("#",""))
+$scope.getDUIDHistory(location.hash.replace("#",""), '')
 }
 });
     
-    $scope.getDUIDHistory = function (DUID) {
+    $scope.getDUIDHistory = function (DUID, event) {
        $scope.activeDUID = DUID
        console.log(DUID)
        $scope.DUIDHistory={}
@@ -193,9 +177,18 @@ $scope.getDUIDHistory(location.hash.replace("#",""))
 	var array = $.map($scope.DUIDHistory, function(value, index) {
 	return [[Date.parse(value.SETTLEMENTDATE), value.SCADAVALUE]];
 	});
+	if (event.ctrlKey){
+	console.log($scope.chartConfig.series)
+	 $scope.chartConfig.title.text = "Powerstation Graph"
+	$scope.chartConfig.series[$scope.chartConfig.series.length]={}
+	$scope.chartConfig.series[$scope.chartConfig.series.length-1].data = array
+       $scope.chartConfig.series[$scope.chartConfig.series.length-1].name = $scope.results[$scope.activeDUID].StationName + " (" +$scope.activeDUID + ")"
+	} else {
+	$scope.chartConfig.series=[{}]
        $scope.chartConfig.title.text = $scope.results[$scope.activeDUID].StationName + " Powerstation Graph"
        $scope.chartConfig.series[0].data = array
        $scope.chartConfig.series[0].name = $scope.results[$scope.activeDUID].StationName + " (" +$scope.activeDUID + ")"
+	}
 location.hash = $scope.activeDUID
 });
     }
