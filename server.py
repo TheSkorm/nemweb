@@ -1,5 +1,5 @@
 from flask import Flask, render_template 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, func
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Float, func, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base  
 from sqlalchemy.orm import sessionmaker 
 from datetime import timedelta, datetime
@@ -11,6 +11,9 @@ import re
 import configparser
 from flask.ext.compress import Compress
 
+import newrelic.agent
+newrelic.agent.initialize('/etc/newrelic.ini')
+
 compress = Compress()
  
 app = Flask(__name__) 
@@ -21,7 +24,7 @@ config = configparser.ConfigParser()
 config.read("config.cfg")
 
 
-engine = create_engine(config["database"]["dbstring"])  
+engine = create_engine(config["database"]["dbstring"], pool_recycle=3600)  
 Base = declarative_base()  
   
 class Downloads(Base):  
@@ -87,7 +90,7 @@ class DispatchSCADA(Base):
 
 class CO2Factor(Base):
      __tablename__ = 'CO2Factor'
-     DUID = Column(String(255), primary_key=True)
+     DUID = Column(String(255), ForeignKey("DispatchSCADA.DUID"), primary_key=True)
      ReportDate = Column(DateTime, primary_key=True)
      Factor = Column(Float)
      def as_dict(self):
@@ -155,9 +158,11 @@ def stationsdata():
 def co2factor():
     export = {}
 #    s = session.query(CO2Factor).all()
-    s = engine.execute("select * from CO2Factor where ReportDate = (select MAX(ReportDate) from CO2Factor);")
+#    s = engine.execute("select * from CO2Factor where ReportDate = (select MAX(ReportDate) from CO2Factor);")
+    s = session.query(CO2Factor).filter(CO2Factor.ReportDate == session.query(func.max(CO2Factor.ReportDate)))
     for item in s:
-         item = dict(item.items())
+#         item = dict(item.items())
+         item = item.as_dict()
          export[item['DUID']] = item  
     return flask.jsonify(results=export)
 
@@ -188,14 +193,18 @@ def stationsnow():
 @app.route("/scada")
 def scada():
     export = {}
-    s = engine.execute("select * from DispatchSCADA where SETTLEMENTDATE = (select MAX(SETTLEMENTDATE) from DispatchSCADA);")
+#    s = engine.execute("select * from DispatchSCADA where SETTLEMENTDATE = (select MAX(SETTLEMENTDATE) from DispatchSCADA);")
+    s = session.query(DispatchSCADA, CO2Factor.Factor).join(CO2Factor).filter(DispatchSCADA.SETTLEMENTDATE == session.query(func.max(DispatchSCADA.SETTLEMENTDATE))  ).filter(CO2Factor.ReportDate == session.query(func.max(CO2Factor.ReportDate)))
 #    s = session.query(DispatchSCADA, DispatchSCADA.SETTLEMENTDATE == func.max(DispatchSCADA.SETTLEMENTDATE)).all()
     for item in s:
 	 #cos = engine.execute("select * from CO2Factor where ReportDate = (select MAX(ReportDate) from CO2Factor);").all()
-         item = dict(item.items())
+#         item = dict(item.items())
+         co2 = item[1]
+         item = item[0].as_dict()
          try:
-             cos = session.query(CO2Factor, CO2Factor.ReportDate == func.max(CO2Factor.ReportDate)).filter(CO2Factor.DUID == item['DUID']).all()
-             item['CO2E'] = cos[0][0].Factor * item['SCADAVALUE']
+              item['CO2E'] = co2 * item['SCADAVALUE']
+#             cos = session.query(CO2Factor, CO2Factor.ReportDate == func.max(CO2Factor.ReportDate)).filter(CO2Factor.DUID == item['DUID']).all()
+#             item['CO2E'] = cos[0][0].Factor * item['SCADAVALUE']
          except:
              pass
          item['SETTLEMENTDATE'] = str(item['SETTLEMENTDATE'])
