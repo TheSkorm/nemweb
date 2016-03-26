@@ -92,13 +92,58 @@ alignTicks: false
         },
         legend: {
             borderWidth: 0
-}
+},
+
+ rangeSelector: {
+            enabled: true,
+                buttons: [{
+                    type: 'day',
+                    count: 3,
+                    text: '3d'
+                }, {
+                    type: 'week',
+                    count: 1,
+                    text: '1w'
+                }, {
+                    type: 'month',
+                    count: 1,
+                    text: '1m'
+                }, {
+                    type: 'month',
+                    count: 6,
+                    text: '6m'
+                }, {
+                    type: 'year',
+                    count: 1,
+                    text: '1y'
+                }, {
+                    type: 'all',
+                    text: 'All'
+                }],
+            inputDateFormat: '%Y-%m-%d %H:%M',
+            inputEditDateFormat: '%Y-%m-%d %H:%M',
+            // Custom parser to parse the %H:%M:%S.%L format
+            inputDateParser: function (value) {
+                value = value.split(/[:\.]/);
+                return Date.UTC(
+                    parseInt(value[0], 10),
+                    parseInt(value[1], 10),
+                    parseInt(value[2], 10),
+                    parseInt(value[3], 10),
+                    parseInt(value[4], 10)
+                );
+            }
+        }
 
  });
 });
 </script>
-<script src="http://code.highcharts.com/highcharts.js"></script>
+<!-- <script src="http://code.highcharts.com/highcharts.js"></script>
 <script src="http://code.highcharts.com/modules/exporting.js"></script>
+-->
+<script src="http://code.highcharts.com/stock/highstock.js"></script>
+<script src="http://code.highcharts.com/stock/modules/exporting.js"></script>
+<script type="text/javascript" src="http://www.highcharts.com/samples/data/usdeur.js"></script>
 	<script>
 regions = ["QLD1","NSW1","SA1","TAS1","VIC1"]
 interconnects = ["N-Q-MNSP1","NSW1-QLD1","T-V-MNSP1","V-S-MNSP1","V-SA","VIC1-NSW1"]
@@ -136,14 +181,14 @@ lastdata = Date.parse(row[region]['datetime'])
 
 for( i =0; i<regions.length; i++){
 var region = regions[i]; // TODO clean this up
-$('#container').highcharts().addSeries({name: region + " $", data: price[region],   marker : {enabled :false}  });
-$('#container').highcharts().addSeries({name: region + " $", linkedTo: ':previous', dashStyle: 'shortdash', color: $('#container').highcharts().series[i*6].color ,   marker : {enabled :false} });
+$('#container').highcharts().addSeries({name: region + " $", data: price[region],   marker : {enabled :false}  ,dataGrouping: {approximation: "average",enabled: true,forced: false,units: [['hour',[1]]]}});
+$('#container').highcharts().addSeries({name: region + " $", linkedTo: ':previous', dashStyle: 'shortdash', color: $('#container').highcharts().series[i*6].color ,   marker : {enabled :false} ,dataGrouping: {approximation: "average",enabled: true,forced: false,units: [['hour',[1]]]}});
 
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " generation", data: generation[region],   marker : {enabled :false} });
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " generation", linkedTo: ':previous',dashStyle: 'shortdash', color: ':previous' , color: $('#container').highcharts().series[i*6+2].color,   marker : {enabled :false} });
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " generation", data: generation[region],   marker : {enabled :false} ,dataGrouping: {approximation: "average",enabled: true,forced: false,units: [['hour',[1]]]}});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " generation", linkedTo: ':previous',dashStyle: 'shortdash', color: ':previous' , color: $('#container').highcharts().series[i*6+2].color,   marker : {enabled :false} ,dataGrouping: {approximation: "average",enabled: true,forced: false,units: [['hour',[1]]]}});
 
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " demand", data: demand[region],   marker : {enabled :false} });
-$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " demand", linkedTo: ':previous',dashStyle: 'shortdash', color: ':previous', color: $('#container').highcharts().series[i*6+4].color,   marker : {enabled :false} });
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " demand", data: demand[region],   marker : {enabled :false} ,dataGrouping: {approximation: "average",enabled: true,forced: false,units: [['hour',[1]]]}});
+$('#container').highcharts().addSeries({yAxis: 1, visible: false, name: region + " demand", linkedTo: ':previous',dashStyle: 'shortdash', color: ':previous', color: $('#container').highcharts().series[i*6+4].color,   marker : {enabled :false} ,dataGrouping: {approximation: "average",enabled: true,forced: false,units: [['hour',[1]]]}});
 }
 
 setInterval(requestUpdate, 30000);

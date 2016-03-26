@@ -17,7 +17,7 @@ newrelic.agent.initialize('/etc/newrelic.ini')
 compress = Compress()
  
 app = Flask(__name__) 
-app.debug = True
+app.debug = False
 Compress(app)
 
 config = configparser.ConfigParser()
@@ -143,6 +143,9 @@ def stations():
 @app.route("/env")
 def env():
     return render_template('env.html')
+@app.route("/history")
+def history():
+    return render_template('historic.html')
 
 
 @app.route("/stations-data")
@@ -169,7 +172,7 @@ def co2factor():
 @app.route("/station-history/<duid>")
 def stationhistory(duid):
     duid = duid.replace("-slash-","/")
-    s = session.query(DispatchSCADA).filter(DispatchSCADA.SETTLEMENTDATE > datetime.now() - timedelta(hours=72)).filter(DispatchSCADA.DUID == duid)
+    s = session.query(DispatchSCADA).filter(DispatchSCADA.SETTLEMENTDATE > datetime.now() - timedelta(hours=128)).filter(DispatchSCADA.DUID == duid)
     export = {}
     for item in s:
          item = item.as_dict()
@@ -210,10 +213,20 @@ def scada():
          item['SETTLEMENTDATE'] = str(item['SETTLEMENTDATE'])
          export[item['DUID']]=item
     return flask.jsonify(results=export)
-	
+
+@app.route("/historic")
+def historic():
+    s = engine.execute("select `datetime`, `regionid`, avg(rrp), max(rrp), min(rrp), avg(demand), max(demand), min(demand),avg(generation), max(generation), min(generation) from dispatchIS GROUP BY HOUR(`datetime`),DAY(`datetime`),MONTH(`datetime`),YEAR(`datetime`), regionid;")
+    export = {}
+    for item in s:
+        item = dict(item.items())
+        if str(item['datetime']) not in export:
+             export[str(item['datetime'])] = {}
+        export[str(item['datetime'])][item['regionid']] = item
+    return flask.jsonify(results=export)
 @app.route("/dispatch")
 def dispatch():
-    s = session.query(dispatchIS).filter(dispatchIS.datetime > datetime.now() - timedelta(hours=48))
+    s = session.query(dispatchIS).filter(dispatchIS.datetime > datetime.now() - timedelta(hours=336))
     export = {}
     for item in s:
          item = item.as_dict()
@@ -224,7 +237,7 @@ def dispatch():
     return flask.jsonify(results=export)
 @app.route("/interconnect")
 def interconnectjson():
-    s = session.query(interconnect).filter(interconnect.datetime > datetime.now() - timedelta(hours=48))
+    s = session.query(interconnect).filter(interconnect.datetime > datetime.now() - timedelta(hours=24))
     export = {}
     for item in s:
          item = item.as_dict()
@@ -271,4 +284,4 @@ def interconnectupdate():
 
 	
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=9999)
+    app.run(host='0.0.0.0', port=5000)
