@@ -35,8 +35,8 @@ urls = {
 	"p5": "http://www.nemweb.com.au/Reports/CURRENT/P5_Reports/",
 	"dispatchis": "http://www.nemweb.com.au/Reports/CURRENT/DispatchIS_Reports/",
 	"notices": "http://www.nemweb.com.au/Reports/CURRENT/Market_Notice/",
-	"scada": "http://nemweb.com.au/Reports/CURRENT/Dispatch_SCADA/",
-        "co2": "http://nemweb.com.au/reports/current/cdeii/"
+	"scada": "http://www.nemweb.com.au/Reports/CURRENT/Dispatch_SCADA/",
+        "co2": "http://www.nemweb.com.au/reports/current/cdeii/"
 }
 
 engine = create_engine(config["database"]["dbstring"])

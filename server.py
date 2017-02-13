@@ -6,12 +6,18 @@ from datetime import timedelta, datetime
 import flask 
 import mysql.connector
 import urllib.request
+import urllib.parse
 from io import BytesIO 
 import re 
 import configparser
 from flask.ext.compress import Compress
 
 import newrelic.agent
+import os
+
+#nem works on Brisbane time
+os.environ['TZ'] = 'Australia/Brisbane'
+
 newrelic.agent.initialize('/etc/newrelic.ini')
 
 compress = Compress()
@@ -111,6 +117,47 @@ def dictfetchall(cursor):
             for row in cursor.fetchall()]
 
 def prettyNotice(noticeText):
+    graph_url = False
+    card = ""
+    notice_ref = False
+    try:
+        data = noticeText.split("\n")
+        unit = False
+        notice_time = False
+        notice_ref = False
+        for line in data:
+            if "Unit:" in line:
+                unit = line.split(":",1)[-1].strip()
+            if "Duration:" in line:
+                notice_time = line.split(" to ")[-1].strip()
+                notice_time = datetime.strptime(notice_time, "%d/%m/%Y %H:%M")
+            if "External Reference" in line:
+                notice_ref = line.split(":",1)[-1].strip()
+        if unit and notice_time and notice_ref:
+            s = session.query(DispatchSCADA).filter(DispatchSCADA.SETTLEMENTDATE > notice_time - timedelta(hours=1)).filter(DispatchSCADA.SETTLEMENTDATE < notice_time +  timedelta(minutes=15)).filter(DispatchSCADA.DUID == unit)
+            x_date = []
+            x_value = []
+            for item in s:
+                item = item.as_dict()
+                x_date.append(item['SETTLEMENTDATE'].strftime("%H:%M"))
+                x_value.append(str(item['SCADAVALUE']))
+                #item['SETTLEMENTDATE'] = str(item['SETTLEMENTDATE'])
+
+                # SCADAVALUE
+            graph_url = "https://image-charts.com/chart?chs=560x300&cht=lc&chds=a&chm=N,000000,0,-1,11&chg=1,1,10,10&chdl="+unit+"%20%28MW%29&chd=t:"
+            graph_url += ",".join(x_value) + "&chxl=0:%7C" + urllib.parse.quote("|".join(x_date))+"%7C&chxt=x,x,y,y"
+            #return flask.jsonify(results=export)
+    except: #annoying but we don't want to hold anything up if we fail '
+        pass
+    imgtag = ""
+    if graph_url:
+        imgtag = "<img src=\"" +graph_url+ "\" />"
+    card = "<meta name=\"twitter:card\" content=\"summary_large_image\">"
+    card += "<meta name=\"twitter:site\" content=\"@au_nem\">"
+    card += "<meta name=\"twitter:creator\" content=\"@au_nem\">"
+    card += "<meta name=\"twitter:image\" content=\""+ graph_url +"\">"
+    card += "<meta name=\"twitter:title\" content=\"NEM MARKET NOTICE\">"
+    card += "<meta name=\"twitter:description\" content=\""+ notice_ref +"\">"
     noticeText = re.sub(r"\r?\n-+\r?\nEND OF REPORT\r?\n-+", r"", noticeText)
     noticeText = re.sub(r"-+\r?\n(.+)\r?\n-+\r?\n", r"\n<h1>\1</h1>", noticeText)
     noticeText = re.sub(r"\r?\n-+\r?\n", r"\n<hr>", noticeText)
@@ -119,15 +166,17 @@ def prettyNotice(noticeText):
     noticeText = re.sub(r"((<tr>.+</tr>\r?\n)+)", r"<table>\1</table>", noticeText)
     noticeText = re.sub(r"\r?\n\r?\n", r"\n<br>", noticeText)
     noticeText = re.sub(r"\n(?!<)(.+)", r"\1<br>\n", noticeText)
-    noticeText = "<html><head><style>body {font-family: Sans-Serif;}</style></head><body>" + noticeText
-    noticeText = noticeText + "</body></html>"
+    noticeText = "<html><head>"+card+"<style>body {font-family: Sans-Serif;}</style></head><body>" + noticeText
+    noticeText = noticeText + imgtag + "</body></html>"
     return noticeText
-
 
 @app.route("/notice/<id>")
 def notice(id):
     url = "http://www.nemweb.com.au/Reports/CURRENT/Market_Notice/" + id
-    data = urllib.request.urlopen(url).read().decode('iso-8859-1','ignore')
+    try:
+        data = urllib.request.urlopen(url).read().decode('iso-8859-1','ignore')
+    except:
+        return flask.Response("Could not get nem notice")
     data = prettyNotice(data)
     
     return flask.Response(data, mimetype="text/html")
@@ -139,6 +188,9 @@ def index():
 @app.route("/stations")
 def stations():
     return render_template('stations.html')
+@app.route("/station_overview")
+def station_overview():
+    return render_template('station_overview.html')
 
 @app.route("/env")
 def env():
@@ -197,7 +249,11 @@ def stationsnow():
 def scada():
     export = {}
 #    s = engine.execute("select * from DispatchSCADA where SETTLEMENTDATE = (select MAX(SETTLEMENTDATE) from DispatchSCADA);")
-    s = session.query(DispatchSCADA, CO2Factor.Factor).join(CO2Factor).filter(DispatchSCADA.SETTLEMENTDATE == session.query(func.max(DispatchSCADA.SETTLEMENTDATE))  ).filter(CO2Factor.ReportDate == session.query(func.max(CO2Factor.ReportDate)))
+    r = session.query(func.max(DispatchSCADA.SETTLEMENTDATE))[0][0]
+    z = session.query(func.max(CO2Factor.ReportDate))[0][0]
+    print(r)
+    print(type(r))
+    s = session.query(DispatchSCADA, CO2Factor.Factor).join(CO2Factor).filter(DispatchSCADA.SETTLEMENTDATE == r  ).filter(CO2Factor.ReportDate == z)
 #    s = session.query(DispatchSCADA, DispatchSCADA.SETTLEMENTDATE == func.max(DispatchSCADA.SETTLEMENTDATE)).all()
     for item in s:
 	 #cos = engine.execute("select * from CO2Factor where ReportDate = (select MAX(ReportDate) from CO2Factor);").all()
@@ -226,7 +282,7 @@ def historic():
     return flask.jsonify(results=export)
 @app.route("/dispatch")
 def dispatch():
-    s = session.query(dispatchIS).filter(dispatchIS.datetime > datetime.now() - timedelta(hours=336))
+    s = session.query(dispatchIS).filter(dispatchIS.datetime > datetime.now() - timedelta(hours=168))
     export = {}
     for item in s:
          item = item.as_dict()
