@@ -152,12 +152,13 @@ def prettyNotice(noticeText):
     imgtag = ""
     if graph_url:
         imgtag = "<img src=\"" +graph_url+ "\" />"
-    card = "<meta name=\"twitter:card\" content=\"summary_large_image\">"
-    card += "<meta name=\"twitter:site\" content=\"@au_nem\">"
-    card += "<meta name=\"twitter:creator\" content=\"@au_nem\">"
-    card += "<meta name=\"twitter:image\" content=\""+ graph_url +"\">"
-    card += "<meta name=\"twitter:title\" content=\"NEM MARKET NOTICE\">"
-    card += "<meta name=\"twitter:description\" content=\""+ notice_ref +"\">"
+    if notice_ref and graph_url:
+        card = "<meta name=\"twitter:card\" content=\"summary_large_image\">"
+        card += "<meta name=\"twitter:site\" content=\"@au_nem\">"
+        card += "<meta name=\"twitter:creator\" content=\"@au_nem\">"
+        card += "<meta name=\"twitter:image\" content=\""+ graph_url +"\">"
+        card += "<meta name=\"twitter:title\" content=\"NEM MARKET NOTICE\">"
+        card += "<meta name=\"twitter:description\" content=\""+ notice_ref +"\">"
     noticeText = re.sub(r"\r?\n-+\r?\nEND OF REPORT\r?\n-+", r"", noticeText)
     noticeText = re.sub(r"-+\r?\n(.+)\r?\n-+\r?\n", r"\n<h1>\1</h1>", noticeText)
     noticeText = re.sub(r"\r?\n-+\r?\n", r"\n<hr>", noticeText)
